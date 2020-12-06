@@ -4,16 +4,12 @@ using System.Linq;
 using System.IO;
 
 
-namespace Day01
+namespace AoC
 {
     public class StarTwo: IStar
     {
-        public void Invoke()
+        public void Invoke(List<string> input)
         {
-            var path = Path.Join(Directory.GetCurrentDirectory(), "Input.txt");
-            var input = File.ReadLines(path).ToList<string>();
-
-
             for(var x = 0; x < input.Count; x++)
             {
                 for(var y = x + 1; y < input.Count; y++)

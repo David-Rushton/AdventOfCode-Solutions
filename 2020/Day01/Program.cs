@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 
-namespace Day01
+namespace AoC
 {
     public static class Program
     {
@@ -13,7 +16,7 @@ namespace Day01
             if(args.Length != 1)
                 throw new Exception(UnexpectedArgExceptionMessage);
 
-            GetStar(args[0]).Invoke();
+            GetStar(args[0]).Invoke(GetInput());
         }
 
 
@@ -24,5 +27,13 @@ namespace Day01
                 "--star-two" => new StarTwo(),
                 _            => throw new Exception(UnexpectedArgExceptionMessage),
             };
+
+        public static List<string> GetInput()
+        {
+            var path = Path.Join(Directory.GetCurrentDirectory(), "Input.txt");
+            return File.ReadLines(path).ToList<string>();
+        }
+
+
     }
 }
