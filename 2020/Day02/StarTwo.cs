@@ -16,7 +16,18 @@ namespace AoC
 
         public void Invoke(List<string> input)
         {
-            throw new NotImplementedException();
+            var validPasswordCount = 0;
+
+            foreach(var password in input)
+            {
+                if(_passwordValidator.IsTobogganValidPassword(password))
+                {
+                    validPasswordCount ++;
+                    Console.WriteLine($"Valid password found: {password}");
+                }
+            }
+
+            Console.WriteLine($"\nFound {validPasswordCount} valid passwords");
         }
     }
 }

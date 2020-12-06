@@ -20,5 +20,24 @@ namespace AoC
 
             return isValid;
         }
+
+        public bool IsTobogganValidPassword(string input)
+        {
+            var pwd = _passwordParser.Parser(input);
+            var pwdCharArray = pwd.Pwd.ToCharArray();
+            var requireCharCount = 0;
+
+
+            foreach(var checkPosition in new [] {pwd.CheckOne, pwd.CheckTwo})
+            {
+                // WARNING: Position to check is one based.
+                //          pwdChar is zero based.
+                if(checkPosition <= pwdCharArray.Length && pwdCharArray[checkPosition - 1] == pwd.RequiredChar)
+                    requireCharCount++;
+            }
+
+
+            return (requireCharCount == 1);
+        }
     }
 }
