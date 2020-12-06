@@ -6,53 +6,27 @@ using System.IO;
 
 namespace Day01
 {
-    public record Candidate (int x, int y);
-
-    public class StarOne
+    public class StarOne: IStar
     {
         public void Invoke()
         {
-            var candidates = new List<Candidate>();
             var path = Path.Join(Directory.GetCurrentDirectory(), "Input.txt");
-            var lines = File.ReadLines(path).ToList<string>();
-            var outerLineNumber = 0;
-            var innerLineNumber = 0;
+            var input = File.ReadLines(path).ToList<string>();
 
 
-            Console.WriteLine("\nSeaching for candidates...");
-            foreach(var outer in lines)
+            for(var x = 0; x < input.Count; x++)
             {
-                outerLineNumber++;
-                innerLineNumber=0;
-
-                foreach(var inner in lines)
+                for(var y = x + 1; y < input.Count; y++)
                 {
-                    var x = int.Parse(outer);
-                    var y = int.Parse(inner);
+                    var xInt = int.Parse(input[x]);
+                    var yInt = int.Parse(input[y]);
 
-                    innerLineNumber++;
-                    if(! (outerLineNumber == innerLineNumber) )
-                        if(x + y == 2020)
-                        {
-                            Console.WriteLine($"Candidate found: {outerLineNumber}:{outer} x {innerLineNumber}:{inner}");
-
-                            var newCandidate = new Candidate
-                            (
-                                x < y ? x : y,
-                                x < y ? y : x
-                            );
-
-                            if(! candidates.Contains(newCandidate) )
-                                candidates.Add(newCandidate);
-                        }
+                    if(xInt + yInt == 2020)
+                    {
+                        Console.WriteLine($"Result: {xInt} * {yInt} = {xInt * yInt}");
+                        Environment.Exit(0);
+                    }
                 }
-            }
-
-
-            Console.WriteLine("\nResults:");
-            foreach(var result in candidates)
-            {
-                Console.WriteLine($"{result.x} * {result.y} = {result.x * result.y}");
             }
         }
     }

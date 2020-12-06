@@ -5,13 +5,24 @@ namespace Day01
 {
     public static class Program
     {
+        const string UnexpectedArgExceptionMessage = "Expected arg --star-one or --star-two";
+
+
         public static void Main(string[] args)
         {
-            if(args[0] == "--star-one")
-                new StarOne().Invoke();
+            if(args.Length != 1)
+                throw new Exception(UnexpectedArgExceptionMessage);
 
-            if(args[0] == "--star-two")
-                new StarTwo().Invoke();
+            GetStar(args[0]).Invoke();
         }
+
+
+        public static IStar GetStar(string starArg) =>
+            starArg switch
+            {
+                "--star-one" => new StarOne(),
+                "--star-two" => new StarTwo(),
+                _            => throw new Exception(UnexpectedArgExceptionMessage),
+            };
     }
 }
