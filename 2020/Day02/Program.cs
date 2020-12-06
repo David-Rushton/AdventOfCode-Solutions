@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.IO;
 
 
 namespace AoC
@@ -16,19 +16,29 @@ namespace AoC
             if(args.Length != 1)
                 throw new Exception(UnexpectedArgExceptionMessage);
 
-            GetStar(args[0]).Invoke(GetInput());
+            var (star, input) = Bootstrap(args[0]);
+            star.Invoke(input);
         }
 
 
-        public static IStar GetStar(string starArg) =>
+        private static (IStar star, List<string> input) Bootstrap(string starArg)
+        {
+            var passwordParser = new PasswordParser();
+            var passwordValidator = new PasswordValidator(passwordParser);
+            var star = GetStar(starArg, passwordValidator);
+
+            return (star, GetInput());
+        }
+
+        private static IStar GetStar(string starArg, PasswordValidator passwordValidator) =>
             starArg switch
             {
-                "--star-one" => new StarOne(),
-                "--star-two" => new StarTwo(),
+                "--star-one" => new StarOne(passwordValidator),
+                "--star-two" => new StarTwo(passwordValidator),
                 _            => throw new Exception(UnexpectedArgExceptionMessage),
             };
 
-        public static List<string> GetInput()
+        private static List<string> GetInput()
         {
             var path = Path.Join(Directory.GetCurrentDirectory(), "Input.txt");
             return File.ReadLines(path).ToList<string>();
