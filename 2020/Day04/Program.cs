@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using AoC.PassportRules;
 
 
 namespace AoC
@@ -24,7 +25,23 @@ namespace AoC
 
 
         private static (IStar star, PassportReader reader) Bootstrap(string starArg) =>
-            (GetStar(starArg), new PassportReader(_inputPath))
+            (
+                GetStar(starArg),
+                new PassportReader
+                (
+                    _inputPath,
+                    new IPassportRule[]
+                    {
+                        new BirthYearPassportRule(),
+                        new ExporationYearPassportRule(),
+                        new EyeColourPassportRule(),
+                        new HairColourPassportRule(),
+                        new HeightPassportRule(),
+                        new IssueYearPassportRule(),
+                        new PassportIdPassportRule()
+                    }
+                )
+            )
         ;
 
         private static IStar GetStar(string starArg) =>

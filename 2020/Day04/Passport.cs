@@ -1,17 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AoC.PassportRules;
 
 
 namespace AoC
 {
     public class Passport
     {
+        readonly Dictionary<string, IPassportRule> _passportRules = new Dictionary<string, IPassportRule>();
+
+
         public Passport() => Fields = new Dictionary<string, string>();
 
 
         public Dictionary<string, string> Fields { get; set; }
 
+
+        public void AddRule(IPassportRule passportRule) => _passportRules.Add(passportRule.FieldName, passportRule);
 
         public bool HasAllRequiredFields()
         {

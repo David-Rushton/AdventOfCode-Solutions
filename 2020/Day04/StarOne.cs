@@ -10,18 +10,9 @@ namespace AoC
     {
         public void Invoke(PassportReader reader)
         {
-            // Passport fields:
-            //   byr (Birth Year)
-            //   iyr (Issue Year)
-            //   eyr (Expiration Year)
-            //   hgt (Height)
-            //   hcl (Hair Color)
-            //   ecl (Eye Color)
-            //   pid (Passport ID)
-            //   [cid (Country ID)]
+            var result = reader.ProcessPassports();
 
-            var validPassports = reader.GetPassports().Count(p => p.HasAllRequiredFields());
-            Console.WriteLine($"\nValid passports: {validPassports}");
+            Console.WriteLine($"\nValid passports: {result.countOfPassportsWithAllRequiredFields}");
         }
     }
 }
