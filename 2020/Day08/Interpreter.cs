@@ -4,21 +4,40 @@ using System.Collections.Generic;
 
 namespace AoC
 {
+    public enum InterpreterExitCodes
+    {
+        Success = 0,
+        Overflow = 1,
+        InfiniteLoop = 2
+    };
+
+
+    public class InterpreterResult
+    {
+        public int Accumulator { get; set; }
+        public InterpreterExitCodes ExitCode { get; set; }
+
+        #nullable disable
+        public List<Instruction> Instructions { get; set; }
+        #nullable enable
+    }
+
+
     public class Interpreter
     {
-        public int Invoke(List<Instruction> instructions, bool verbose)
+        public InterpreterResult Invoke(
+            List<Instruction> instructions,
+            bool verbose
+        )
         {
             var accumulator = 0;
             var index = 0;
-            var instructionsProcessed = 0;
 
-            while(true)
+
+            while( ! programComplete() )
             {
                 var instruction = instructions[index];
 
-                // We've entered an infinite loop!
-                if(instruction.Visited)
-                    break;
 
                 // Flag as visited before we change index
                 instructions[index] = instruction with {Visited = true};
@@ -42,13 +61,30 @@ namespace AoC
                         throw new Exception($"Unsupported instruction: {instruction}");
                 }
 
-                instructionsProcessed++;
-
                 if(verbose)
-                    Console.WriteLine($"{instructionsProcessed.ToString("##")}: {instruction}");
+                    Console.WriteLine(instruction);
             }
 
-            return accumulator;
+
+            return new InterpreterResult
+            {
+                Accumulator =  accumulator,
+                ExitCode = getExitCode(),
+                Instructions = instructions
+            };
+
+
+            bool programComplete() => index == instructions.Count || instructions[index].Visited;
+
+            InterpreterExitCodes getExitCode() =>
+                index switch
+                {
+                    int idx when idx == instructions.Count  => InterpreterExitCodes.Success,
+                    int idx when idx > instructions.Count   => InterpreterExitCodes.Overflow,
+                    _                                       => InterpreterExitCodes.InfiniteLoop
+                }
+                // index == instructions.Count ? InterpreterExitCodes.Success : InterpreterExitCodes.InfiniteLoop
+            ;
         }
     }
 }
