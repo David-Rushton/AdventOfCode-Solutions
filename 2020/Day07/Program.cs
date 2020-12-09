@@ -9,24 +9,7 @@ namespace AoC
     {
         static void Main(string[] args)
         {
-            // (\d\s)?\w+\s\w+\sbag
-            // ^[a-z]+\s[a-z]+\sbags\scontain(\s\d\s[a-z]+\s[a-z]+\s(bags|bag)(,|.))+
-            // posh green bags contain no other bags.
-            var tokeniser = new Tokeniser();
-            var graph = new Graph();
-
-
-            // Populate graph.
-            foreach(var token in tokeniser.GetTokens())
-            {
-                graph.CreateNodeIfNotExists(token.Container);
-
-                if(token.Contained != string.Empty)
-                {
-                    graph.CreateNodeIfNotExists(token.Contained);
-                    graph.CreateEdge(token.Contained, token.Container, token.ContainedCount);
-                }
-            }
+            var graph = BuildGraph();
 
             var sgb = graph.Nodes["shiny gold bag"];
             var containers = new List<string>();
@@ -42,7 +25,26 @@ namespace AoC
         }
 
 
-        public static void WalkGraphContainedBy(GraphNode node, ref List<string> containers)
+        private static Graph BuildGraph()
+        {
+            var graph = new Graph();
+            var tokeniser = new Tokeniser();
+
+            foreach(var token in tokeniser.GetTokens())
+            {
+                graph.CreateNodeIfNotExists(token.Container);
+
+                if(token.Contained != string.Empty)
+                {
+                    graph.CreateNodeIfNotExists(token.Contained);
+                    graph.CreateEdge(token.Contained, token.Container, token.ContainedCount);
+                }
+            }
+
+            return graph;
+        }
+
+        private static void WalkGraphContainedBy(GraphNode node, ref List<string> containers)
         {
             if( ! containers.Contains(node.Key) )
                 containers.Add(node.Key);
@@ -53,12 +55,15 @@ namespace AoC
             }
         }
 
-        public static void WalkGraphContains(GraphNode node, int multiplier, ref int contained)
+        private static void WalkGraphContains(GraphNode node, int multiplier, ref int contained, int level = 0)
         {
             foreach(var neighbour in node.GetNeighbours(GraphEdge.Container))
             {
-                contained += neighbour.Cost * multiplier;
-                WalkGraphContains(neighbour.Neighbour, multiplier + neighbour.Cost, ref contained);
+                var cost = neighbour.Cost * multiplier;
+                contained += cost;
+
+                Console.WriteLine($"{new string(' ', level)} {neighbour.Neighbour.Key} ({neighbour.Cost} x {multiplier} = {cost}) ({contained})");
+                WalkGraphContains(neighbour.Neighbour, cost, ref contained, level + 1);
             }
         }
     }

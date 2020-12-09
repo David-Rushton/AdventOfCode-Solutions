@@ -13,7 +13,7 @@ namespace AoC
     );
 
 
-    class Tokeniser
+    public class Tokeniser
     {
         const string _nothingContainedText = " contain no other bags.";
 
