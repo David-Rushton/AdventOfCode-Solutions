@@ -12,6 +12,7 @@
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/bin/Debug/net5.0/Day09.dll",
             "args": [
+                "127",
                 "--test"
             ],
             "cwd": "${workspaceFolder}",
