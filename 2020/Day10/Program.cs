@@ -16,7 +16,7 @@ namespace Day10
             var sortedAdapters = GetInput(inputPath).OrderBy(a => a);
             var lastAdapter = 0;
             var consecutiveOneJoltJumps = 0;
-            var joltJumps = new List<int>();
+            var joltJumps = new List<long>();
             var joltJumpsCount = new Dictionary<int, int>()
             {
                 {0, 0},
@@ -36,8 +36,7 @@ namespace Day10
 
 
             // Final adapter is always a +3 step up, and not included in input array
-            joltJumpsCount[3]++;
-            joltJumps.Add(3);
+            RecordJump(3);
 
 
             Console.WriteLine(string.Format
@@ -89,7 +88,7 @@ Steps {5}:
                 }
             }
 
-            int CalculateDistinctValidAdapterCombinations()
+            long CalculateDistinctValidAdapterCombinations()
             {
                 // Output is the count of every valid combination.  A combination is valid if it every jump <= 3 jolts.
                 // Consecutive sequences of 1 jumps can be compressed, resulting in multiple valid combinations.
@@ -105,7 +104,7 @@ Steps {5}:
                 //  |              4  |                    16 |                    3 |                 13 |
                 //  |              5  |                    32 |                    8 |                 24 |
 
-                var validCombinations = 1;
+                long validCombinations = 1;
 
                 foreach(var item in joltJumps)
                 {
@@ -115,25 +114,25 @@ Steps {5}:
 
                     if(itemLessOne > 0)
                     {
-                        var possibleCombinations = (int)Math.Pow(2, itemLessOne);
-                        var invalidCombinations = BernoullisTriangle(itemLessOne);
+                        long possibleCombinations = (int)Math.Pow(2, itemLessOne);
+                        long invalidCombinations = BernoullisTriangle(itemLessOne);
                         validCombinations *= (possibleCombinations - invalidCombinations);
 
                         if(verboseMode)
-                            Console.WriteLine($"-> {itemLessOne}: Possible {possibleCombinations} |Invalid {invalidCombinations} ({validCombinations})");
+                            Console.WriteLine($"-> {itemLessOne}: Possible {possibleCombinations} | Invalid {invalidCombinations}| Valid {possibleCombinations - invalidCombinations} ({validCombinations})");
                     }
                 }
 
                 return validCombinations;
             }
 
-            int BernoullisTriangle(int sequenceNumber)
+            long BernoullisTriangle(long sequenceNumber)
             {
                 // Bernoulli's triangle: https://en.wikipedia.org/wiki/Bernoulli%27s_triangle
                 // = (n+2)*2^(n-1)
                 sequenceNumber -= 3;
                 if(sequenceNumber >= 0)
-                    return (int)((sequenceNumber + 2) * Math.Pow(2, (sequenceNumber - 1)));
+                    return (long)((sequenceNumber + 2) * Math.Pow(2, (sequenceNumber - 1)));
 
                 return 0;
             }
