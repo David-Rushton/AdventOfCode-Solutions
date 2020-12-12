@@ -12,8 +12,9 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net5.0/Day11.dll",
             "args": [
-                "--test",
-                "--verbose"
+                "--verbose",
+                "--extend--adjacency",
+                "--test"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
