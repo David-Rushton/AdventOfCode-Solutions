@@ -6,26 +6,11 @@ using System.Linq;
 
 namespace AoC
 {
-    public enum FerryOrintation
-    {
-        North = 0,
-        East = 90,
-        South = 180,
-        West = 270
-    }
-
-    public record FerryLocation(
-        FerryOrintation Orintation,
-        int NorthSouth,
-        int EastWest
-    );
-
-
-    public class Ferry
+    public class Ferry: IFerry
     {
         public FerryLocation PlotCourse(IEnumerable<NavigationInstruction> Instructions)
         {
-            var location = new FerryLocation(FerryOrintation.East, 0 , 0);
+            var location = new FerryLocation(Orintation.East, 0 , 0);
 
             foreach(var instruction in Instructions)
             {
@@ -67,7 +52,7 @@ namespace AoC
             );
         }
 
-        private FerryOrintation CalculateNewOrintation(FerryOrintation orintation, NavigationDirection direction, int value)
+        private Orintation CalculateNewOrintation(Orintation orintation, NavigationDirection direction, int value)
         {
             var newOrintation = (int)orintation;
 
@@ -84,7 +69,7 @@ namespace AoC
             Debug.Assert(validOrintations.Contains(newOrintation), $"Invalid orintation: {newOrintation}");
 
 
-            return (FerryOrintation)newOrintation;
+            return (Orintation)newOrintation;
         }
 
         private (int NorthSouth, int EastWest) CalculateTravelOffset(FerryLocation location, NavigationInstruction instruction) =>
@@ -97,10 +82,10 @@ namespace AoC
                 NavigationDirection.Forward =>
                     location.Orintation switch
                     {
-                        FerryOrintation.North   => (instruction.Value, 0),
-                        FerryOrintation.East    => (0, instruction.Value),
-                        FerryOrintation.South   => (instruction.Value * -1, 0),
-                        FerryOrintation.West    => (0, instruction.Value * -1),
+                        Orintation.North   => (instruction.Value, 0),
+                        Orintation.East    => (0, instruction.Value),
+                        Orintation.South   => (instruction.Value * -1, 0),
+                        Orintation.West    => (0, instruction.Value * -1),
                         _                       => (0, 0)
                     },
                 _                           => (0, 0),

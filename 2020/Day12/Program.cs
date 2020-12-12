@@ -10,10 +10,10 @@ namespace AoC
     {
         public static void Main(string[] args)
         {
-
+            var useWaypoint = Environment.GetCommandLineArgs().Contains("--waypoint");
             var useTestData = Environment.GetCommandLineArgs().Contains("--test");
             var inputPath = Path.Join(Directory.GetCurrentDirectory(), useTestData ? "Test-Input.txt" : "Input.txt");
-            var app = Bootstrap(inputPath);
+            var app = Bootstrap(inputPath, useWaypoint);
             var result = app.Ferry.PlotCourse(app.Instructions);
 
 
@@ -30,10 +30,10 @@ namespace AoC
         }
 
 
-        private static (Ferry Ferry, IEnumerable<NavigationInstruction> Instructions) Bootstrap(string inputPath)
+        private static (IFerry Ferry, IEnumerable<NavigationInstruction> Instructions) Bootstrap(string inputPath, bool useWaypoint)
         {
             var navigationInstructions = new NavigationInstructions().GetInstructions(inputPath);
-            var ferry = new Ferry();
+            IFerry ferry = useWaypoint ? new Ferry2() : new Ferry();
 
             return (ferry, navigationInstructions);
         }
