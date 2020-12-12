@@ -32,7 +32,10 @@ namespace AoC
                 Debug.Assert(instruction.Direction != NavigationDirection.Unknown, $"Unsupported direction: {instruction}");
                 Debug.Assert(instruction.Value >= 0, $"Negative instruction values are not supported: {instruction}");
 
+                Verbose.WriteLine($"Course change: {instruction}");
+
                 location = UpdateLocation(location, instruction);
+                Verbose.WriteLine($"New location: {location}\n");
             }
 
 
@@ -44,10 +47,6 @@ namespace AoC
         {
             var orintation = instruction.Direction switch
             {
-                NavigationDirection.North   => FerryOrintation.North,
-                NavigationDirection.East    => FerryOrintation.East,
-                NavigationDirection.South   => FerryOrintation.South,
-                NavigationDirection.West    => FerryOrintation.West,
                 NavigationDirection.Left    => CalculateNewOrintation(location.Orintation, instruction.Direction, instruction.Value),
                 NavigationDirection.Right   => CalculateNewOrintation(location.Orintation, instruction.Direction, instruction.Value),
                 _                           => location.Orintation
@@ -57,7 +56,7 @@ namespace AoC
             {
                 NavigationDirection.Left    => (0, 0),
                 NavigationDirection.Right   => (0, 0),
-                _                           => CalculateTravelOffset(orintation, instruction.Value)
+                _                           => CalculateTravelOffset(location, instruction)
             };
 
 
@@ -72,14 +71,12 @@ namespace AoC
         {
             var newOrintation = (int)orintation;
 
-            if(direction == NavigationDirection.Right)
-                value = value *1;
-
+            newOrintation += direction == NavigationDirection.Right ? value : (value * -1);
 
             if(newOrintation < 0)
                 newOrintation += 360;
 
-            if(newOrintation > 360)
+            if(newOrintation >= 360)
                 newOrintation -= 360;
 
 
@@ -90,14 +87,23 @@ namespace AoC
             return (FerryOrintation)newOrintation;
         }
 
-        private (int NorthSouth, int EastWest) CalculateTravelOffset(FerryOrintation orintation, int value) =>
-            orintation switch
+        private (int NorthSouth, int EastWest) CalculateTravelOffset(FerryLocation location, NavigationInstruction instruction) =>
+            instruction.Direction switch
             {
-                FerryOrintation.North   => (value, 0),
-                FerryOrintation.East    => (0, value),
-                FerryOrintation.South   => (value * -1, 0),
-                FerryOrintation.West    => (0, value * -1),
-                _                       => (0, 0),
+                NavigationDirection.North   => (instruction.Value, 0),
+                NavigationDirection.East    => (0, instruction.Value),
+                NavigationDirection.South   => (instruction.Value * -1, 0),
+                NavigationDirection.West    => (0, instruction.Value * -1),
+                NavigationDirection.Forward =>
+                    location.Orintation switch
+                    {
+                        FerryOrintation.North   => (instruction.Value, 0),
+                        FerryOrintation.East    => (0, instruction.Value),
+                        FerryOrintation.South   => (instruction.Value * -1, 0),
+                        FerryOrintation.West    => (0, instruction.Value * -1),
+                        _                       => (0, 0)
+                    },
+                _                           => (0, 0),
             }
         ;
     }
