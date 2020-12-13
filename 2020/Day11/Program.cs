@@ -190,32 +190,17 @@ namespace Day11
 
         static char ReadFirstSeat(Grid grid, BoardDirection direction, int row, int col)
         {
-            var value = string.Empty;
-            int offset = direction switch
-            {
-                BoardDirection.Up           => grid.Cols * -1,
-                BoardDirection.UpRight      => (grid.Cols - 1) * -1,
-                BoardDirection.Right        => 1,
-                BoardDirection.DownRight    => grid.Cols + 1,
-                BoardDirection.Down         => grid.Cols,
-                BoardDirection.DownLeft     => grid.Cols - 1,
-                BoardDirection.Left         => -1,
-                BoardDirection.UpLeft       => (grid.Cols + 1) * -1,
-                _                           => -999
-            };
-            var lastIndex = ConvertAddressToIndex(grid.Rows - 1, grid.Cols - 1);
-            var index = ConvertAddressToIndex(row, col) + offset;
-            var address = (row, col);
+            var offset = GetOffset();
+            var address = ApplyOffset((row, col), offset);
 
-            while(index >= 0 && index <= lastIndex && isValidMove(direction, address.row, address.col))
+            while(IsAddressValid(address))
             {
-                address = ConvertIndexToAddress(index);
                 var cell = grid.Board[address.row][address.col];
 
                 if(isSeat(cell))
                     return cell;
 
-                index += offset;
+                address = ApplyOffset(address, offset);
             }
 
 
@@ -223,30 +208,34 @@ namespace Day11
             return _seatEmpty;
 
 
-            int ConvertAddressToIndex(int row, int col) => (row * (grid.Cols)) + col;
+            (int row, int col) GetOffset() =>
+                direction switch
+                {
+                    BoardDirection.Up           => (-1,  0),
+                    BoardDirection.UpRight      => (-1,  1),
+                    BoardDirection.Right        => ( 0,  1),
+                    BoardDirection.DownRight    => (-1,  1),
+                    BoardDirection.Down         => (-1,  0),
+                    BoardDirection.DownLeft     => (-1, -1),
+                    BoardDirection.Left         => ( 0, -1),
+                    BoardDirection.UpLeft       => ( 1, -1),
+                    _                           => (int.MinValue, int.MinValue)
+                }
+            ;
 
-            (int row, int col) ConvertIndexToAddress(int index) => (index / grid.Cols, index % grid.Cols);
+            (int row, int col) ApplyOffset((int row, int col) offsetFrom, (int row, int col) offset) =>
+                (offsetFrom.row + offset.row, offsetFrom.col + offset.col);
+            ;
 
-            bool isValidMove(BoardDirection direction, int rowIdx, int colIdx)
-            {
-                if(rowIdx == 0 && new [] {BoardDirection.Up, BoardDirection.UpRight, BoardDirection.UpLeft}.Contains(direction))
-                    return false;
-
-                if(colIdx == grid.Cols - 1 && new [] {BoardDirection.UpRight, BoardDirection.Right, BoardDirection.DownRight}.Contains(direction))
-                    return false;
-
-                if(rowIdx == grid.Rows -1 && new [] {BoardDirection.DownRight, BoardDirection.Down, BoardDirection.DownLeft}.Contains(direction))
-                    return false;
-
-                if(colIdx == 0 && new [] {BoardDirection.DownLeft, BoardDirection.Left, BoardDirection.UpLeft}.Contains(direction))
-                    return false;
-
-                return true;
-            }
+            bool IsAddressValid((int row, int col) addressToValidate) =>
+                   addressToValidate.row >= 0
+                && addressToValidate.row <  grid.Rows
+                && addressToValidate.col >= 0
+                && addressToValidate.col <  grid.Cols
+            ;
         }
 
         static bool isSeat(char value) => value != _floor;
-
 
         static void WriteLineVerbose(Grid grid) => WriteLineVerbose(grid.Board);
         static void WriteLineVerbose(char[][] message) => WriteLineVerbose(string.Join('\n', message.Select(l => string.Join(string.Empty, l))));
