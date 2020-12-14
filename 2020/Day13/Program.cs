@@ -12,15 +12,18 @@ namespace AoC
         {
             var useTestData = Environment.GetCommandLineArgs().Contains("--test");
             var inputPath = Path.Join(Directory.GetCurrentDirectory(), useTestData ? "Test-Input.txt" : "Input.txt");
+            var app = Bootstrap(inputPath);
 
-
-            Bootstrap();
+            app.Engine.Calculate(app.Input);
         }
 
 
-        private static void Bootstrap()
+        private static (Engine Engine, Dictionary<long, long> Input) Bootstrap(string inputPath)
         {
-            // no-op
+            var input = new Input().Get(inputPath);
+            var engine = new Engine();
+
+            return (engine, input);
         }
     }
 }
