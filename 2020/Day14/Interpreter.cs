@@ -8,6 +8,7 @@ namespace AoC
 {
     public class Interpreter
     {
+        readonly bool _overwrite;
         readonly Tokeniser _tokeniser;
         readonly Converter _converter;
         readonly Dictionary<long, string> _memory = new ();
@@ -15,8 +16,8 @@ namespace AoC
         readonly string _defaultValue = "".PadLeft(36, '0');
 
 
-        public Interpreter(Tokeniser tokeniser, Converter converter, IMemoryAddressDecoder memoryAddressDecoder) =>
-            (_tokeniser, _converter, _memoryAddressDecoder) = (tokeniser, converter, memoryAddressDecoder)
+        public Interpreter(bool overwrite, Tokeniser tokeniser, Converter converter, IMemoryAddressDecoder memoryAddressDecoder) =>
+            (_overwrite, _tokeniser, _converter, _memoryAddressDecoder) = (overwrite, tokeniser, converter, memoryAddressDecoder)
         ;
 
 
@@ -43,9 +44,17 @@ namespace AoC
                     _memory.Add(address, _defaultValue);
             }
 
-            void UpdateMemory(long address, string mask, long value) =>
-                _memory[address] = _converter.ApplyMask(_memory[address], mask, value)
-            ;
+            void UpdateMemory(long address, string mask, long value)
+            {
+                if(_overwrite)
+                {
+                    _memory[address] = System.Convert.ToString(value, 2).PadLeft(36, '0');
+                }
+                else
+                {
+                    _memory[address] = _converter.ApplyMask(_memory[address], mask, value);
+                }
+            }
 
             long GetResult() =>
                 _memory

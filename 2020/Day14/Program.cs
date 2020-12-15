@@ -35,7 +35,7 @@ namespace AoC
             ;
             var tokeniser = new Tokeniser(inputPath);
             var converter = new Converter(binary);
-            var interpreter = new Interpreter(tokeniser, converter, memoryAddressDecoder);
+            var interpreter = new Interpreter(useV2, tokeniser, converter, memoryAddressDecoder);
 
             return interpreter;
         }
