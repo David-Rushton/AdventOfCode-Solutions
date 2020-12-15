@@ -8,14 +8,19 @@ namespace AoC
 {
     public class Converter
     {
-        readonly char[] _overrideCharacters = new [] {'0', '1'};
+        readonly char[] _overrideCharacters = new [] { '0', '1' };
+        readonly Binary _binary;
+
+
+        public Converter(Binary binary) => (_binary) = (binary);
 
 
         public string ApplyMask(string from, string mask, long value)
         {
             var len = from.Length;
-            var to = System.Convert.ToString(value, 2).PadLeft(len, '0').ToCharArray();
+            var to = _binary.To(value).ToCharArray();
 
+            //Apply mask
             for(var i = 0; i < len; i++)
             {
                 if(_overrideCharacters.Contains(mask[i]))

@@ -10,12 +10,13 @@ namespace AoC
     {
         readonly Tokeniser _tokeniser;
         readonly Converter _converter;
-        readonly Dictionary<int, string> _memory = new ();
+        readonly Dictionary<long, string> _memory = new ();
+        readonly IMemoryAddressDecoder _memoryAddressDecoder;
         readonly string _defaultValue = "".PadLeft(36, '0');
 
 
-        public Interpreter(Tokeniser tokeniser, Converter converter) =>
-            (_tokeniser, _converter) = (tokeniser, converter)
+        public Interpreter(Tokeniser tokeniser, Converter converter, IMemoryAddressDecoder memoryAddressDecoder) =>
+            (_tokeniser, _converter, _memoryAddressDecoder) = (tokeniser, converter, memoryAddressDecoder)
         ;
 
 
@@ -25,21 +26,24 @@ namespace AoC
             {
                 Verbose.WriteLine($"  Processing token: {token}");
 
-                InitialiseMemoryIfNotExists(token.Address);
-                UpdateMemory(token.Address, token.Mask, token.Value);
+                foreach(var address in _memoryAddressDecoder.Decode(token.Address, token.Mask))
+                {
+                    InitialiseMemoryIfNotExists(address);
+                    UpdateMemory(address, token.Mask, token.Value);
+                }
             }
 
 
             Console.WriteLine($"\nResult: {GetResult()}\n");
 
 
-            void InitialiseMemoryIfNotExists(int address)
+            void InitialiseMemoryIfNotExists(long address)
             {
                 if( ! _memory.ContainsKey(address) )
                     _memory.Add(address, _defaultValue);
             }
 
-            void UpdateMemory(int address, string mask, long value) =>
+            void UpdateMemory(long address, string mask, long value) =>
                 _memory[address] = _converter.ApplyMask(_memory[address], mask, value)
             ;
 

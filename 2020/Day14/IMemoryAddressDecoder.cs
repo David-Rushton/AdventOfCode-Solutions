@@ -6,8 +6,8 @@ using System.IO;
 
 namespace AoC
 {
-    public interface IConverter
+    public interface IMemoryAddressDecoder
     {
-        string Convert(string from, string mask, long applyValue);
+        public IEnumerable<long> Decode(int address, string mask);
     }
 }
