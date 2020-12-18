@@ -177,12 +177,12 @@ namespace AoC
             (
                 ticket,
                 result,
-                departureFields["departure date"].ToString("000"),
-                departureFields["departure station"].ToString("000"),
-                departureFields["departure location"].ToString("000"),
-                departureFields["departure time"].ToString("000"),
-                departureFields["departure platform"].ToString("000"),
-                departureFields["departure track"].ToString("000")
+                myTicket.Fields[departureFields["departure date"]].ToString("000"),
+                myTicket.Fields[departureFields["departure station"]].ToString("000"),
+                myTicket.Fields[departureFields["departure location"]].ToString("000"),
+                myTicket.Fields[departureFields["departure time"]].ToString("000"),
+                myTicket.Fields[departureFields["departure platform"]].ToString("000"),
+                myTicket.Fields[departureFields["departure track"]].ToString("000")
             ));
             Console.WriteLine('\n');
         }
