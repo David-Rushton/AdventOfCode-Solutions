@@ -1,7 +1,8 @@
 namespace AoC.Tokeniser
 {
     public record TicketToken(
-        TicketOwner owner,
+        int TicketId,
+        TicketOwner Owner,
         int[] Fields
     );
 }

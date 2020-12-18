@@ -10,21 +10,22 @@ namespace AoC
 {
     public class Validator
     {
-        public List<TicketToken> Invoke(TicketToken myTicket, List<TicketToken> passengerTickets, List<RuleToken> rules)
+        public List<TicketToken> Invoke(List<TicketToken> passengerTickets, List<RuleToken> rules)
         {
             var ticketScanningErrorRate = 0;
-            var validTickets = new List<TicketToken>();
+            var invalidTickets = new List<int>();
 
             foreach(var ticket in passengerTickets)
                 foreach(var field in ticket.Fields)
-                    if(PassesAllRules(field))
-                       validTickets.Add(ticket);
-                    else
-                       ticketScanningErrorRate += field;
+                    if( ! PassesAllRules(field) )
+                    {
+                        AddToInvalidTickets(ticket);
+                        ticketScanningErrorRate += field;
+                    }
 
 
             Console.WriteLine($"\nticket scanning error rate: {ticketScanningErrorRate}\n");
-            return validTickets;
+            return passengerTickets.Where(t => ! invalidTickets.Contains(t.TicketId) ).ToList();
 
 
             bool PassesAllRules(int field)
@@ -41,6 +42,12 @@ namespace AoC
                    ( field >= rule.FirstRangeLowerBound  && field <= rule.FirstRangeUpperBound  )
                 || ( field >= rule.SecondRangeLowerBound && field <= rule.SecondRangeUpperBound )
             ;
+
+            void AddToInvalidTickets(TicketToken validTicket)
+            {
+                if( ! invalidTickets.Contains(validTicket.TicketId) )
+                    invalidTickets.Add(validTicket.TicketId);
+            }
         }
     }
 }

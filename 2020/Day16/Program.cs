@@ -22,20 +22,28 @@ namespace AoC
         static void Main(string[] args)
         {
             var app = Bootstrap(args.Contains("--test"));
+            var validTickets = app.Validator.Invoke
+                (
+                    app.InputReader.PassengerTickets,
+                    app.InputReader.Rules
+                )
+            ;
 
-            app.Validator.Invoke
-            (
-                app.InputReader.MyTicket,
-                app.InputReader.PassengerTickets,
-                app.InputReader.Rules
-            );
+            app.FieldDetector.Invoke
+                (
+                    app.InputReader.MyTicket,
+                    validTickets,
+                    app.InputReader.Rules
+                )
+            ;
         }
 
 
-        private static (InputReader InputReader, Validator Validator) Bootstrap(bool useTestInput) =>
+        private static (InputReader InputReader, Validator Validator, FieldDetector FieldDetector) Bootstrap(bool useTestInput) =>
             (
                 new InputReader(useTestInput),
-                new Validator()
+                new Validator(),
+                new FieldDetector()
             )
         ;
     }

@@ -14,6 +14,7 @@ namespace AoC.Tokeniser
         const string _ticketPattern = @"(\d+,){2,19}\d+";
         readonly string _testFilePath = Path.Join(Directory.GetCurrentDirectory(), "Test-Input.txt");
         readonly string _puzzleFilePath = Path.Join(Directory.GetCurrentDirectory(), "Input.txt");
+        int _indexSeed = 0;
 
 
         public InputReader(bool useTestData) => Initialise(useTestData);
@@ -65,13 +66,13 @@ namespace AoC.Tokeniser
             var tickets = new Regex(_ticketPattern).Matches(input);
 
             // My ticket is always first
-            MyTicket = new TicketToken(TicketOwner.Mine, GetFields(tickets[0].Value));
+            MyTicket = new TicketToken(_indexSeed++, TicketOwner.Mine, GetFields(tickets[0].Value));
 
 
             // Rest belong to other passengers
             PassengerTickets = tickets
                 .Skip(1)
-                .Select( m => new TicketToken(TicketOwner.Passenger, GetFields(m.Value)) )
+                .Select( m => new TicketToken(_indexSeed++, TicketOwner.Passenger, GetFields(m.Value)) )
                 .ToList()
             ;
 
