@@ -26,7 +26,7 @@ namespace AoC
         {
             for(var row = 0; row < rawInput.Length; row++)
                 for(var col = 0; col < rawInput[row].Length; col++)
-                    yield return new ConwayCube(col, row, 0, getIsActive(rawInput[row], col));
+                    yield return new ConwayCube(col, row, 0, 0, getIsActive(rawInput[row], col));
 
 
             bool getIsActive(string row, int col) => row.Substring(col, 1) == _isActive;

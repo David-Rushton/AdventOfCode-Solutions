@@ -49,20 +49,22 @@ namespace AoC
             var newX = GetRange( _universe.Select(c => c.Value.Position.X).Max() );
             var newY = GetRange( _universe.Select(c => c.Value.Position.Y).Max() );
             var newZ = GetRange( _universe.Select(c => c.Value.Position.Z).Max() );
+            var newW = GetRange( _universe.Select(c => c.Value.Position.W).Max() );
 
             foreach(var x in newX)
                 foreach(var y in newY)
                     foreach(var z in newZ)
-                        createCube(x, y, z);
+                        foreach(var w in newW)
+                            createCube(x, y, z, w);
 
 
             IEnumerable<int> GetRange(int dimensionMax) =>
                 Enumerable.Range(0 - cycleCount, dimensionMax + (cycleCount * 2) +  1)
             ;
 
-            void createCube(int x, int y, int z)
+            void createCube(int x, int y, int z, int w)
             {
-                var cube = new ConwayCube(new ConwayCubePosition(x, y, z), false);
+                var cube = new ConwayCube(new ConwayCubePosition(x, y, z, w), false);
                 if( ! _universe.ContainsKey(cube.Id) )
                     _universe.Add(cube.Id, cube);
             }
@@ -91,46 +93,51 @@ namespace AoC
             for(int xOffset = -1; xOffset < 2; xOffset++)
                 for(int yOffset = -1; yOffset < 2; yOffset++)
                     for(int zOffset = -1; zOffset < 2; zOffset++)
-                        if( ! (xOffset == 0 && yOffset == 0 && zOffset == 0) )
-                            yield return getConwayCubePositionOffset(xOffset, yOffset, zOffset);
+                        for(int wOffset = -1; wOffset < 2; wOffset++)
+                            if( ! (xOffset == 0 && yOffset == 0 && zOffset == 0 && wOffset == 0) )
+                                yield return getConwayCubePositionOffset(xOffset, yOffset, zOffset, wOffset);
 
 
-            ConwayCubePosition getConwayCubePositionOffset(int x, int y, int z) =>
-                new ConwayCubePosition(cubePosition.X + x, cubePosition.Y + y, cubePosition.Z + z)
+            ConwayCubePosition getConwayCubePositionOffset(int x, int y, int z, int w) =>
+                new ConwayCubePosition(cubePosition.X + x, cubePosition.Y + y, cubePosition.Z + z, cubePosition.W + w)
             ;
         }
 
         private void PrintUniverse()
         {
+            var wSeries = _universe.Select(kvp => kvp.Value.Position.W).Distinct().OrderBy(w => w);
             var zSeries = _universe.Select(kvp => kvp.Value.Position.Z).Distinct().OrderBy(z => z);
 
-            foreach(var z in zSeries)
+            foreach(var w in wSeries)
             {
-                var sequence = _universe
-                    .Where(c => c.Value.Position.Z == z)
-                    .OrderBy(c => c.Value.Position.Y)
-                    .ThenBy(c => c.Value.Position.X)
-                    .Select
-                    (
-                        c =>
-                        new { Y = c.Value.Position.Y, X = c.Value.Position.X, State = c.Value.IsActive ? '#' : '.'  }
-                    )
-                ;
-                var lastY = sequence.Min(c => c.Y);
-
-                Console.WriteLine($"\nZ: {z}");
-
-                foreach(var cell in sequence)
+                foreach(var z in zSeries)
                 {
-                    if(cell.Y != lastY)
-                    {
-                        Console.WriteLine();
-                        lastY = cell.Y;
-                    }
-                    Console.Write(cell.State);
-                }
+                    var sequence = _universe
+                        .Where(c => c.Value.Position.Z == z && c.Value.Position.W == w)
+                        .OrderBy(c => c.Value.Position.Y)
+                        .ThenBy(c => c.Value.Position.X)
+                        .Select
+                        (
+                            c =>
+                            new { Y = c.Value.Position.Y, X = c.Value.Position.X, State = c.Value.IsActive ? '#' : '.'  }
+                        )
+                    ;
+                    var lastY = sequence.Min(c => c.Y);
 
-                Console.WriteLine();
+                    Console.WriteLine($"\nW: {w} : Z: {z}");
+
+                    foreach(var cell in sequence)
+                    {
+                        if(cell.Y != lastY)
+                        {
+                            Console.WriteLine();
+                            lastY = cell.Y;
+                        }
+                        Console.Write(cell.State);
+                    }
+
+                    Console.WriteLine();
+                }
             }
 
 

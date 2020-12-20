@@ -4,10 +4,11 @@ namespace AoC
     (
         int X,
         int Y,
-        int Z
+        int Z,
+        int W
     )
     {
-        public string Id => string.Format("{0}:{1}:{2}", this.X, this.Y, this.Z);
+        public string Id => string.Format("{0}:{1}:{2}:{3}", this.X, this.Y, this.Z, this.W);
     };
 
 
@@ -17,10 +18,10 @@ namespace AoC
         bool IsActive
     )
     {
-        public ConwayCube(int x, int y, int z, bool isActive)
+        public ConwayCube(int x, int y, int z, int w, bool isActive)
             : this
             (
-                new ConwayCubePosition(x, y, z),
+                new ConwayCubePosition(x, y, z, w),
                 isActive
             )
         { }
