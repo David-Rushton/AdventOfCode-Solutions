@@ -42,6 +42,7 @@ namespace AoC
             Debug.Assert(tileLines.Count == 0, "Input read but not returned");
 
 
+            // format: Tile dddd:
             int ExtractTileId(string line) =>
                 int.Parse
                 (
@@ -54,47 +55,13 @@ namespace AoC
         {
             Debug.Assert(tileId != _invalidTileId, "Invalid tile id");
 
-            var Top     = tileLines.First();
-            var Left    = tileLines.Select(c => c.First()).Reverse().ToArray();
-            var Bottom  = tileLines.Last().Reverse().ToArray();
-            var Right   = tileLines.Select(c => c.Last()).ToArray();
-
-
-            // We need to reverse left and bottom edges to account for the effect of tile rotation
             return new Tile(
-                Id: tileId,
-                Edge: new TileEdge
-                (
-                    ConvertEdgeToValue(Top),
-                    ConvertEdgeToValue(Left),
-                    ConvertEdgeToValue(Bottom),
-                    ConvertEdgeToValue(Right)
-                ),
-                FlippedEdge: new TileEdge
-                (
-                    ConvertEdgeToValue(Top.Reverse().ToArray()),
-                    ConvertEdgeToValue(Left.Reverse().ToArray()),
-                    ConvertEdgeToValue(Bottom.Reverse().ToArray()),
-                    ConvertEdgeToValue(Right.Reverse().ToArray())
-                )
+                id: tileId,
+                top: tileLines.First(),
+                left: tileLines.Select(c => c.First()).ToArray(),
+                bottom: tileLines.Last(),
+                right: tileLines.Select(c => c.Last()).ToArray()
             );
-        }
-
-        private int ConvertEdgeToValue(char[] edge)
-        {
-            var total = 0;
-            var characterValue = 1;
-
-            foreach(var character in edge)
-            {
-                if(character == '#')
-                    total += characterValue;
-
-                characterValue = characterValue * 2;
-            }
-
-            return total;
         }
     }
 }
-;
