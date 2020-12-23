@@ -11,7 +11,6 @@ namespace AoC
         static void Main(string[] args)
         {
             var (tokens, interpreter) = Bootstrap(string.Join("", args));
-
             interpreter.Calculate(tokens);
         }
 

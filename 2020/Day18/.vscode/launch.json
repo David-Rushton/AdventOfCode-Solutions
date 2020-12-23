@@ -12,7 +12,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net5.0/Day18.dll",
             "args": [
-                "E:/Repos/AdventOfCode-Solutions/2020/Day18/Input.txt"
+                "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
