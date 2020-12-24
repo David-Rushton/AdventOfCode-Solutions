@@ -10,8 +10,12 @@ namespace AoC
         static void Main(string[] args)
         {
             var components = Bootstrap();
+            var rulesInput = components.Lexer.GetRules();
+            var rule = components.Parser.GetRuleZero(rulesInput);
+            var result = components.Interpreter.CountOfImagesThatMatchRule(rule, components.Lexer.GetImages());
 
-            Console.WriteLine(components.Parser.GetRuleZero(components.Lexer.GetRules()));
+
+            Console.WriteLine($"\nMatching images: {result}");
             Environment.Exit(0);
 
 
@@ -21,10 +25,11 @@ namespace AoC
                 Path.Join(Directory.GetCurrentDirectory(), UseTestInput() ? "Test-Input.txt" : "Input.txt")
             ;
 
-            (Lexer Lexer, Parser Parser) Bootstrap() =>
+            (Lexer Lexer, Parser Parser, Interpreter Interpreter) Bootstrap() =>
                 (
                     new Lexer(GetInputPath()),
-                    new Parser()
+                    new Parser(),
+                    new Interpreter()
                 )
             ;
         }

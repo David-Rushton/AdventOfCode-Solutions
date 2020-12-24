@@ -45,7 +45,7 @@ namespace AoC
             {
                 yield return new SubRules(subsetRules.Skip(1).Take(subsetRuleCount).ToArray());
 
-                if(subsetRuleCount == 2)
+                if(subsetCount == 2)
                     yield return new SubRules(subsetRules.Skip(subsetRuleCount + 1).Take(subsetRuleCount).ToArray());
             }
 

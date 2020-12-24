@@ -20,9 +20,11 @@ namespace AoC
             foreach(var rule in ExtractSortedNonLeafNodes())
             {
                 var subRuleCount = rule.SubRules.Length;
-                var template = subRuleCount == 1 ? "({0})" : "(({0})|({1}))";
+                var template = subRuleCount == 1 ? "{0}" : "({0}|{1})";
                 var subSet1Value = string.Empty;
                 var subSet2Value = string.Empty;
+
+
 
                 ruleValues.Add
                 (
@@ -35,7 +37,7 @@ namespace AoC
             foreach(var entry in ruleValues)
                 Console.WriteLine($"{entry.Key} {entry.Value}");
 
-            return ruleValues[0];
+            return $"^{ruleValues[0]}$";
 
 
             string GetSubSetRuleValues(RuleToken rule, int subRuleIndex)
@@ -71,11 +73,15 @@ namespace AoC
             var dependantRules = new Dictionary<int, (int level, RuleToken rule)>();
 
             PopulateDependantRules(rules[0], 0);
+            PrintDependantRules(dependantRules);
             return dependantRules;
 
 
             void PopulateDependantRules(RuleToken rule, int level)
             {
+                // if(level > 100)
+                //     return;
+
                 AddIfNotExitsToDependantRules(rule, level);
 
                 foreach(var subRuleSet in rule.SubRules)
@@ -89,6 +95,24 @@ namespace AoC
                     dependantRules.Add(rule.Id, (level, rule));
             }
 
+        }
+        private void PrintDependantRules(Dictionary<int, (int level, RuleToken rule)> dependantRules)
+        {
+            Console.WriteLine("\nRule dependency tree");
+            foreach(var rule in dependantRules)
+            {
+                var ruleV = rule.Value;
+                Console.WriteLine(
+                    string.Format
+                    (
+                        "|{0}> {1}: {2}",
+                        "".PadLeft(ruleV.level).Replace(' ', '-'),
+                        ruleV.rule.Id,
+                        ruleV.rule.Value
+                    )
+                );
+            }
+            Console.WriteLine();
         }
     }
 }
