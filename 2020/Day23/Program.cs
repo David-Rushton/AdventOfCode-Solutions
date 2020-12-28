@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
 
@@ -6,13 +7,19 @@ namespace AoC
 {
     class Program
     {
-        static void Main(string[] args) =>
-            new Cups().Play
+        static void Main(string[] args)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            new CupsStarTwo().Play
             (
                 GetCupsStartingSequence(args.Contains("--test"))
-            )
-        ;
+            );
 
+            stopwatch.Stop();
+            Console.WriteLine($"Run time: {stopwatch.Elapsed.Seconds} seconds");
+        }
 
         private static int[] GetCupsStartingSequence(bool useTestData) =>
             useTestData
