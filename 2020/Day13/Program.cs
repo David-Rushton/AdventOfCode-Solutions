@@ -8,22 +8,35 @@ namespace AoC
 {
     public static class Program
     {
+        static (long[] numbers, long[] remainders) _testInput =>
+            (
+                new long[] { 7, 13, 59, 31, 19 },
+                new long[] { 0, 12, 55, 25, 12 }
+            )
+        ;
+
+        static (long[] numbers, long[] remainders) _input =>
+            (
+                new long[] { 19, 41, 643,  17,  13,  23, 509,  37,  29 },
+                new long[] { 0,  32, 624, -19, -24, -19, 459, -19, -50 }
+            )
+        ;
+
+
         public static void Main(string[] args)
         {
-            var useTestData = Environment.GetCommandLineArgs().Contains("--test");
-            var inputPath = Path.Join(Directory.GetCurrentDirectory(), useTestData ? "Test-Input.txt" : "Input.txt");
-            var app = Bootstrap(inputPath);
+            var components = Bootstrap(args.Contains("--test"));
+            var result = components.chineseRemainderTheorem.Solve(components.input.numbers, components.input.remainders);
 
-            app.Engine.Calculate(app.Input);
+            Console.WriteLine($"\nResult: {result}");
         }
 
 
-        private static (Engine Engine, Dictionary<long, long> Input) Bootstrap(string inputPath)
-        {
-            var input = new Input().Get(inputPath);
-            var engine = new Engine();
-
-            return (engine, input);
-        }
+        private static ((long[] numbers, long[] remainders) input, ChineseRemainderTheorem chineseRemainderTheorem) Bootstrap(bool useTestInput) =>
+            (
+                useTestInput ? _testInput : _input,
+                new ChineseRemainderTheorem()
+            )
+        ;
     }
 }

@@ -2,4 +2,4 @@
 
 ## Star 1
 
-The code doesn't cover the first star.  Solved with my calculator.
+The code doesn't cover the first star.  Solved with a calculator.
