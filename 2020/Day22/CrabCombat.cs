@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace AoC
 {
-    class Game
+    class CrabCombat
     {
         public void Play(int[] playerOneStartingHand, int[] playerTwoStartingHand)
         {

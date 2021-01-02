@@ -8,19 +8,24 @@ namespace AoC
     {
         static void Main(string[] args)
         {
-            var app = Bootstrap(args.Contains("--test"));
+            var playCrabCombat = args.Contains("--star-one");
+            var components = Bootstrap(args.Contains("--test"));
 
-            app.game.Play(app.playerOneHand, app.playerTwoHand);
+            if(playCrabCombat)
+                components.crabCombat.Play(components.playerOneHand, components.playerTwoHand);
+            else
+                components.recursiveCombat.Play(components.playerOneHand, components.playerTwoHand);
         }
 
 
 
 
-        private static (Game game, int[] playerOneHand, int[] playerTwoHand) Bootstrap(bool useTest)
+        private static (CrabCombat crabCombat, RecursiveCombat recursiveCombat, int[] playerOneHand, int[] playerTwoHand) Bootstrap(bool useTest)
         {
             return
             (
-                new Game(),
+                new CrabCombat(),
+                new RecursiveCombat(),
                 PlayerOneHand(),
                 PlayerTwoHand()
             );
