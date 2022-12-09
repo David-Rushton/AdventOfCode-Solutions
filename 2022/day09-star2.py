@@ -51,8 +51,6 @@ def main(path: str):
 
     print(f'visited: {len(tailVisited)}')
 
-
-
 def plotVisited(tailVisited):
     for top in range(-20, -60, -1):
         for left in range(-20, -225, -1):
@@ -61,7 +59,6 @@ def plotVisited(tailVisited):
             else:
                 print('.', end = '')
         print()
-
 
 if __name__ == '__main__':
     isTest = sys.argv[1] in ['true', 'test', 'yes', 'on']
