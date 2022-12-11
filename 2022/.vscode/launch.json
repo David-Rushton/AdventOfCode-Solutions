@@ -11,9 +11,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
+            "cwd": "${workspaceFolder}/11",
             "args": [
                 "test",
-                "star1"
+                "star2"
             ]
         }
     ]
