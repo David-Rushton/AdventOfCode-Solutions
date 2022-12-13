@@ -3,30 +3,51 @@ import sys
 
 def main(path: str):
     pairs = parse_input(path)
-    iteration = 1
+    pairs.append([[2]])
+    pairs.append([[6]])
 
-    in_order_indexes = []
-    in_order_count = 0
-    not_in_order_count = 0
+    cocktail_sort(pairs)
 
-    while(len(pairs) > 0):
-        left = pairs.pop(0)
-        right = pairs.pop(0)
-        is_in_order = True
+    index = 0
+    decoder_indexes = []
 
-        # for i in range(len(left)):
-        print(f'\n== Pair {iteration} ==\n- Compare {left} vs {right}')
-        if in_order(left, right, depth=0):
-            in_order_indexes.append(iteration)
-            in_order_count += 1
-        else:
-            not_in_order_count +=1
+    for pair in pairs:
+        index +=1
+        print(pair)
+        if pair in [[[2]], [[6]]]:
+            decoder_indexes.append(index)
 
-        iteration += 1
+    if len(decoder_indexes) != 2:
+        raise Exception('Unexpected number of indexes found')
 
-    print(f'\n\n== Results ==\n- Order Sum {in_order_indexes} = ({sum(in_order_indexes)})\n- In Order {in_order_count}\n- Not in Order {not_in_order_count}\n- Iterations {iteration - 1}\n')
+    print(f'\n\n== Result ==\nDecoder Key = {decoder_indexes[0]} x {decoder_indexes[1]} = {decoder_indexes[0] * decoder_indexes[1]}')
 
-def in_order(left, right, depth):
+def cocktail_sort(items):
+    swapped = True
+
+    while swapped:
+        swapped = False
+
+        for i in range(len(items) -1):
+            if not in_order(items[i], items[i +1]):
+                temp = items[i]
+                items[i] = items[i + 1]
+                items[i + 1] = temp
+                swapped = True
+
+        if not swapped:
+            break
+
+        swapped = False
+
+        for i in range(len(items) - 1):
+            if not in_order(items[i], items[i + 1]):
+                temp = items[i]
+                items[i] = items[i + 1]
+                items[i + 1] = temp
+                swapped = True
+
+def in_order(left, right, depth=0):
 
     padding = ''.rjust(depth)
 
