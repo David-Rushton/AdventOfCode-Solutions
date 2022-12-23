@@ -154,20 +154,8 @@ def print_maze(maze: list[str, str], location: Location, instruction: any, direc
     print(f'- Instruction: {instruction}   ')
     print(f'- Direction: {direction}\n')
 
-
-
-    min_row = 0
-    max_row = len(maze)
-    if max_row > 30:
-        min_row = location.row - 20 if location.row > 20 else 0
-        max_row = min_row + 40
-
-    if True:
+    if show_map:
         for row in range(len(maze)):
-
-            if row < min_row or row > max_row:
-                continue;
-
             for column in range(len(maze[row])):
                 cell = maze[row][column]
 
@@ -183,9 +171,6 @@ def print_maze(maze: list[str, str], location: Location, instruction: any, direc
                 print(cell, end='')
             print()
         print()
-
-    # if not is_test_mode:
-    #     x = input()
 
 def print_password(location: Location, direction: str):
     direction_scores = {
