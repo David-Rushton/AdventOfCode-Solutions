@@ -104,15 +104,15 @@ def main(is_test_mode: bool, path: str) -> None:
     starting_cave_name ='AA'
     cave_router = CaveRouter(caves, cave_map)
 
-    routes = get_routes(starting_cave_name, caves, cave_map, required_caves, cave_router)
-    routes.sort(key=lambda x: x.score)
-    for route in routes:
-        print(f'- {" > ".join(route.path)}= {route.score}')
+    best_route = get_best_route(starting_cave_name, caves, cave_map, required_caves, cave_router)
 
-    # print(f'Best score: {best}')
+    print('\n== Result ==\n')
+    print(f'- Best path: {" > ".join(best_route.path[0])}')
+    print(f'- Best score: {best_route.score}')
+
     exit(0)
 
-def get_routes(
+def get_best_route(
     starting_cave_name: str,
     caves: dict[str, Cave],
     cave_map: dict[str, list[str]],
@@ -121,11 +121,10 @@ def get_routes(
     remaining_time: int=TIME_LIMIT,
     score=0,
     path: str='',
-    routes: list[CaveRoute]=[],
+    best_route: CaveRoute=CaveRoute('AA', 'AA', 0, [], -1, -1),
     depth: int=0
-) -> list[CaveRoute]:
+) -> CaveRoute:
 
-    padding = ''.ljust(depth * 2)
     delimiter = ' > '
 
     if depth == 0:
@@ -133,33 +132,14 @@ def get_routes(
         print(f'\n== Routes ==\n')
 
     if len(required_caves) == 0 or remaining_time <= 2:
-        # if score > best_score:
-        #     print(f'New best route: {path} with a score of {score}')
-        #     best_score = score
-
-        routes.append(CaveRoute(
-            source_name='AA',
-            destination_name=starting_cave_name,
-            destination_flow_rate=0,
-            path=path.split(delimiter),
-            steps=-1,
-            score=score))
-        print(f'\r{len(routes)}', end='')
-
-    # TODO:
-    # We need a heuristic or two to speed things up.
-    # Cull if:
-    # - sum of remaining caves is not enough to beat best
-    # - outside of top x
-    # if len(routes) > 100:
-        # routes.sort(key=lambda x: x.score)
-        # best_score = { score: 1500 }
-    # current_score = score + get_remaining_score(caves, required_caves, remaining_time)
-    # if best_score > 0 and current_score < best_score:
-    #     # print(f'\nCannot beat score {best_score.score} with {current_score}')
-    #     # print(f'- Best: {best_score.path}')
-    #     # print(f'- Current: {path}\n')
-    #     return
+        if score > best_route.score:
+            print(f'New best route: {path} with a score of {score}')
+            best_route.source_name='AA',
+            best_route.destination_name=starting_cave_name,
+            best_route.destination_flow_rate=0,
+            best_route.path=path.split(delimiter),
+            best_route.steps=-1,
+            best_route.score=score
 
     for i in range(len(required_caves)):
         required_cave = required_caves[i]
@@ -167,7 +147,11 @@ def get_routes(
         route = cave_router.get_route(starting_cave_name, required_cave, remaining_time)
         route_score = score + route.score
 
-        get_routes(
+        max_remaining_score = route_score + get_remaining_score(caves, required_caves, remaining_time)
+        if best_route.score > max_remaining_score:
+            return
+
+        get_best_route(
             required_cave,
             caves,
             cave_map,
@@ -176,21 +160,12 @@ def get_routes(
             remaining_time=remaining_time - route.steps - 1,
             score=route_score,
             path=f'{path} > {required_cave}',
-            # best_score=max(best_score, route_score),
-            routes=routes,
+            best_route=best_route,
             depth=depth + 1
         )
 
     if depth == 0:
-        return routes
-
-# def get_best_route(cave: Cave, seed_route: Route) -> Route:
-#     tabu = [seed_route]
-
-#     # TODO: Stopping condition
-#     # TODO: https://en.wikipedia.org/wiki/Tabu_search#Pseudocode
-#     while True:
-#         pass
+        return best_route
 
 def get_remaining_score(caves: dict[str, Cave], required_caves: list[str], remaining_time) -> int:
     score = 0
@@ -200,61 +175,6 @@ def get_remaining_score(caves: dict[str, Cave], required_caves: list[str], remai
 
     return score
 
-def get_seed_path(cave: Cave) -> str:
-    steps = []
-
-    while len(steps) < 30:
-        steps.append(cave.name)
-        cave = cave.connected_to[0]
-
-    return '>'.join(steps)
-
-def get_route(
-    source_name: str,
-    destination_name: str,
-    caves: dict[str, Cave],
-    cave_map: dict[str, list[str]],
-    remaining_time: int
-) -> CaveRoute:
-    """
-    Finds the shortest path between two caves.
-    """
-    queue: list[CaveRouteStep] = []
-    queue_index: dict[str, CaveRouteStep] = {}
-    visited = {}
-
-    for cave_name in caves:
-        distance = 0 if cave_name == source_name else sys.maxsize
-        cave_route = CaveRouteStep(cave_name, distance, previous=None)
-        queue.append(cave_route)
-        queue_index[cave_name] = cave_route
-
-    while len(queue) > 0:
-        queue.sort(key=lambda x: x.distance)
-        current = queue.pop(0)
-        visited[current.name] = current
-
-        for neighbour_name in cave_map[current.name]:
-            neighbour = queue_index[neighbour_name]
-            if neighbour in queue:
-                neighbour_distance = current.distance + 1
-                if neighbour_distance < neighbour.distance:
-                    neighbour.distance = neighbour_distance
-                    neighbour.previous = current
-
-        if current.name == destination_name:
-            break
-
-    route = CaveRoute(
-        source_name,
-        destination_name,
-        path=get_path(current),
-        steps=current.distance,
-        score=score_path(remaining_time, current.distance, caves[current.name].flow_rate)
-    )
-
-    return route
-
 def get_path(step: CaveRouteStep) -> list[str]:
     result = []
 
@@ -263,13 +183,6 @@ def get_path(step: CaveRouteStep) -> list[str]:
         step = step.previous
 
     return result
-
-# def score_path(remaining_time: int, steps: int, flow_rate: int) -> int:
-#     factor = remaining_time - steps - 1
-#     if factor > 0:
-#         return factor * flow_rate
-#     else:
-#         return 0
 
 def get_required_caves(caves: dict[str, Cave]) -> list[str]:
     for cave_name in caves:
