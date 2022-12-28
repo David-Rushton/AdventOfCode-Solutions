@@ -1,163 +1,148 @@
 from dataclasses import dataclass
-from enum import Enum
-import os
-import sys
 import re
+import sys
+from typing import Generator
+
+
+TIME_LIMIT = 24
+
 
 @dataclass
-class Resources:
-    ore: int
-    clay: int
-    obsidian: int
-    geode: int
-
-@dataclass
-class Robot:
-    ore_cost: int
-    clay_cost: int
-    obsidian_cost: int
+class RobotCost:
+    ore_required: int
+    clay_required: int
+    obsidian_required: int
 
 @dataclass
 class Blueprint:
-    id_number: int
+    id: int
+    ore_robot: RobotCost
+    clay_robot: RobotCost
+    obsidian_robot: RobotCost
+    geode_robot: RobotCost
+    maximum_required_per_minute: RobotCost
+
+@dataclass
+class BlueprintQualityLevel:
+    id: int
+    geodes_collected: int
     quality_level: int
-    ore_robot: Robot
-    clay_robot: Robot
-    obsidian_robot: Robot
-    geode_robot: Robot
+
+@dataclass
+class Robots:
+    ore_robots: int
+    clay_robots: int
+    obsidian_robots: int
+    geode_robots: int
+
+@dataclass
+class Resources:
+    time_remaining: int
+    ore_collected: int
+    clay_collected: int
+    obsidian_collected: int
+    geode_collected: int
 
 
-def main(is_test: bool, path: str) -> None:
-    blueprints = list(parse_blueprints(path))
-
-    for blueprint in blueprints:
-        blueprint.quality_level = calculate_quality_level(blueprint)
-        print_blueprint(blueprint)
-
-def calculate_quality_level(blueprint: Blueprint) -> int:
-    # prioritise higher level robots.
-    # figure out the quickest way to add one to stock of highest unlocked
-    #   - saving up
-    #   - +1 next level down
-    #   - maybe recursse?
-    minutes = 1
-
-    robots = Resources(ore = 1, clay = 0, obsidian = 0, geode = 0)
-    balance = Resources(ore = 0, clay = 0, obsidian = 0, geode = 0)
-
-    while minutes <= 24:
-        is_factory_building = False
-
-
-        # time_to_next_ore_robot
-        # time_to_next_clay_robot
-        # time_to_next_obsidian_robot
-        # time_to_next_geode_robot
-        #
-        # can_build_obsidian_without_delaying_geode
-        #   ore req = ore cost - ore held
-        #   days to ore = ore req / ore robots
-        #   clay req = ...
-        #   days to clay = ...
-        #   days = max( days to ore, days to clay)
-        #   rebate = ...
-        #
-        # can_build_clay_without_delaying_obsidian
-        # can_build_ore_without_delaying_clay
-
-
-
-        # build?
-        if can_purchase(is_factory_building, balance, blueprint.geode_robot):
-            balance = purchase_robot(blueprint.geode_robot, balance)
-            is_factory_building = True
-            balance.geode -= 1
-            robots.geode += 1
-
-        if can_purchase(is_factory_building, balance, blueprint.obsidian_robot):
-            balance = purchase_robot(blueprint.obsidian_robot, balance)
-            is_factory_building = True
-            balance.obsidian -= 1
-            robots.obsidian += 1
-
-        if balance.clay <= blueprint.obsidian_robot.clay_cost - robots.clay:
-            if can_purchase(is_factory_building, balance, blueprint.clay_robot):
-                balance = purchase_robot(blueprint.clay_robot, balance)
-                is_factory_building = True
-                balance.clay -= 1
-                robots.clay += 1
-
-            if can_purchase(is_factory_building, balance, blueprint.ore_robot):
-                balance = purchase_robot(blueprint.ore_robot, balance)
-                is_factory_building = True
-                balance.ore -= 1
-                robots.ore += 1
-
-        # mine
-        balance.ore += robots.ore
-        balance.clay += robots.clay
-        balance.obsidian += robots.obsidian
-        balance.geode += robots.geode
-
-        print(f'== Minute {minutes} ==')
-        print(f'- ore = {balance.ore}')
-        print(f'- clay = {balance.clay}')
-        print(f'- obsidian = {balance.obsidian}')
-        print(f'- geode = {balance.geode}')
-        print(f'- ore-collectors {robots.ore} | clay-collectors {robots.clay} | obsidian-collectors {robots.obsidian} | geode-crackers {robots.geode}')
-        print()
-
-        minutes += 1
-
-    return blueprint.id_number * balance.geode
-
-def purchase_robot(robot: Robot, balance: Resources) -> Resources:
-    return Resources(
-        ore = balance.ore - robot.ore_cost,
-        clay = balance.clay - robot.clay_cost,
-        obsidian = balance.obsidian - robot.obsidian_cost,
-        geode = balance.geode
-    )
-
-def can_purchase(is_factory_building: bool, balance: Resources, robot: Robot) -> bool:
-    if not is_factory_building:
-        if balance.ore >= robot.ore_cost:
-            if balance.clay >= robot.clay_cost:
-                if balance.obsidian >= robot.obsidian_cost:
-                    return True
-
-    return False
-
-def should_buy_robot(ore_required: int, clay_required: int, obsidian_required: int) -> bool:
-    return False
-
-def parse_blueprints(path: str):
-    for blueprint in open(path, 'r').read().splitlines():
-        elements = list(map(int, re.findall('[0-9]+', blueprint)))
-
-        if len(elements) != 7:
-            message = f'Expected 7 numbers, found {len(elements)}.  Cannot parse blueprint: {blueprint}'
-            raise Exception(message)
-
-        yield Blueprint(
-            id_number=int(elements[0]),
-            quality_level=0,
-            ore_robot = Robot(ore_cost = elements[1], clay_cost = 0, obsidian_cost = 0),
-            clay_robot = Robot(ore_cost = elements[2], clay_cost = 0, obsidian_cost = 0),
-            obsidian_robot = Robot(ore_cost = elements[3], clay_cost = elements[4], obsidian_cost = 0),
-            geode_robot = Robot(ore_cost = elements[5], clay_cost = 0, obsidian_cost = elements[6])
-        )
-
-def print_blueprint(blueprint: Blueprint):
-    print(f'Blueprint {blueprint.id_number}:')
-    print(f'  Each ore robot costs {blueprint.ore_robot.ore_cost}.')
-    print(f'  Each clay robot costs {blueprint.clay_robot.ore_cost} ore.')
-    print(f'  Each obsidian robot costs {blueprint.obsidian_robot.ore_cost} ore and {blueprint.obsidian_robot.clay_cost} clay.')
-    print(f'  Each geode robot costs {blueprint.geode_robot.ore_cost} ore and {blueprint.geode_robot.obsidian_cost} obsidian.')
-    print(f'  Quality level = {blueprint.quality_level}.')
+def main(is_test_mode: bool, path: str) -> None:
+    print('\n== Not Enough Minerals ==\n')
+    for quality_level in get_quality_levels(parse_blueprints(path)):
+        print(f'- Blueprint #{quality_level.id} collected {quality_level.geodes_collected} geodes.  Quality level = {quality_level.quality_level}.')
     print()
 
+def get_quality_levels(blueprints: Generator[Blueprint, None, None]) -> Generator[BlueprintQualityLevel, None, None]:
+    for blueprint in blueprints:
+        resources = Resources(time_remaining=TIME_LIMIT, ore_collected=0, clay_collected=0, obsidian_collected=0, geode_collected=0)
+        robots = Robots(ore_robots=1, clay_robots=0, obsidian_robots=0, geode_robots=0)
+        yield get_blueprint_quality_level(blueprint, resources, robots)
+
+def get_blueprint_quality_level(blueprint: Blueprint, resources: Resources, robots: Robots) -> BlueprintQualityLevel:
+    while resources.time_remaining > 0:
+
+        # discard less productive routes early
+        # figure out what robots we can build
+            # include unlocked robots
+                # where unlocked = resource collected per minute < max required per minute
+                # &&
+                # we are mining required build resources
+        # recursively try each unlocked robot
+        # once geode cracker is created we can calculate its total lifetime yield
+            # we can generate a heuristic best case here for future yield, to filter less productive routes early
+                # heuristic = sum of numbers 1 to time remaining + geodes already collected
+
+        # TODO:
+        # implement above
+
+        pass
+
+    return BlueprintQualityLevel(id=blueprint.id, geodes_collected=0, quality_level=0)
+
+def get_geodes_available(geode_robots: int, time_remaining: int) -> int:
+    """
+    Best case; we can build one additional geode cracking robot every minute.
+    Each robot cracks one geode per minute, from creation until the time limit.
+    If there are 5 minutes left we can build 5 robots:
+        min    robots  collected
+        1      1        0
+        2      2        1
+        3      3        3
+        4      4        10
+        5      5        15
+    Where collected is equal to the sum of robots available in each minute.
+    """
+    # step squad, hush, hush...
+    max_yield_from_new_robots = time_remaining * (time_remaining + 1) / 2
+    return max_yield_from_new_robots + (geode_robots * time_remaining)
+
+def print_blueprint(blueprint: Blueprint) -> None:
+    print(f'\nBlueprint: {blueprint.id}')
+    print(f'- Each ore robot costs {blueprint.ore_robot.ore_required} ore')
+    print(f'- Each clay robot costs {blueprint.clay_robot.ore_required} ore')
+    print(f'- Each obsidian robot costs {blueprint.obsidian_robot.ore_required} ore and {blueprint.obsidian_robot.clay_required}')
+    print(f'- Each geode robot costs {blueprint.geode_robot.ore_required} ore and {blueprint.geode_robot.obsidian_required}\n')
+
+def parse_blueprints(path: str) -> Generator[Blueprint, None, None]:
+    # Format:
+    # Blueprint x: Each ore robot costs x ore. Each clay robot costs x ore. Each obsidian robot costs x ore and x clay. Each geode robot costs x ore and x obsidian.
+    #           0                       1                            2                                3         4                              5         6
+    blueprints = open(path, 'r').read().splitlines()
+    for blueprint in blueprints:
+        numbers = re.findall('[0-9]+', blueprint)
+        max_ore = max(int(numbers[1]), int(numbers[2]), int(numbers[3]), int(numbers[5]))
+        max_clay = int(numbers[4])
+        max_obsidian = int(numbers[6])
+
+        yield Blueprint(
+            id=int(numbers[0]),
+            ore_robot=RobotCost(
+                ore_required=int(numbers[1]),
+                clay_required=0,
+                obsidian_required=0
+            ),
+            clay_robot=RobotCost(
+                ore_required=int(numbers[2]),
+                clay_required=0,
+                obsidian_required=0
+            ),
+            obsidian_robot=RobotCost(
+                ore_required=int(numbers[3]),
+                clay_required=int(numbers[4]),
+                obsidian_required=0
+            ),
+            geode_robot=RobotCost(
+                ore_required=int(numbers[5]),
+                clay_required=0,
+                obsidian_required=int(numbers[6])
+            ),
+            maximum_required_per_minute=RobotCost(
+                ore_required=max_ore,
+                clay_required=max_clay,
+                obsidian_required=max_obsidian
+            )
+        )
+
+
 if __name__ == '__main__':
-    is_test = sys.argv[1] == 'test'
-    path = 'input.test.txt' if is_test else 'input.txt'
-    main(is_test, path)
+    is_test_mode = True if sys.argv[1] == 'test' else False
+    path = 'input.test.txt' if is_test_mode else 'input.txt'
+    main(is_test_mode, path)
