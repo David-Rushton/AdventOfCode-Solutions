@@ -7,7 +7,8 @@ import sys
 from typing import Generator
 
 
-TIME_LIMIT = 24
+STAR_ONE_TIME_LIMIT = 24
+STAR_TWO_TIME_LIMIT = 32
 
 class RobotType(Enum):
     ORE_ROBOT = 0
@@ -58,22 +59,33 @@ class BestBlueprintConfiguration:
     robots: Robots
     geode_collected: int
 
-def main(is_test_mode: bool, path: str) -> None:
+def main(is_test_mode: bool, is_star_two: bool, path: str) -> None:
     print('\n== Not Enough Minerals ==')
 
     quality_levels_sum = 0
-    for quality_level in get_quality_levels(parse_blueprints(path)):
+    first_three_geodes_cracked_product = 1
+    blueprints_checked = 0
+    time_limit = STAR_TWO_TIME_LIMIT if is_star_two else STAR_ONE_TIME_LIMIT
+
+    for quality_level in get_quality_levels(parse_blueprints(path), time_limit):
         robots = quality_level.robots
         quality_levels_sum += quality_level.quality_level
+        blueprints_checked += 1
+        first_three_geodes_cracked_product = first_three_geodes_cracked_product * quality_level.geodes_collected
         print(f'- Geodes collected: {quality_level.geodes_collected}')
         print(f'- Robots: ore {robots.ore_robots}, clay {robots.clay_robots}, obsidian {robots.obsidian_robots}, geode {robots.geode_robots}')
         print(f'- Quality level: {quality_level.quality_level}.')
-    print(f'\nResult: {quality_levels_sum}\n')
 
-def get_quality_levels(blueprints: Generator[Blueprint, None, None]) -> Generator[BlueprintQualityLevel, None, None]:
+        if blueprints_checked == 3:
+            break
+
+    print(f'\nQuality level sum: {quality_levels_sum}')
+    print(f'Product of geodes cracked in first three blueprints: {first_three_geodes_cracked_product}\n')
+
+def get_quality_levels(blueprints: Generator[Blueprint, None, None], time_limit: int) -> Generator[BlueprintQualityLevel, None, None]:
     for blueprint in blueprints:
         print_blueprint(blueprint)
-        resources = Resources(time_remaining=TIME_LIMIT, ore_collected=0, clay_collected=0, obsidian_collected=0, geode_collected=0)
+        resources = Resources(time_remaining=time_limit, ore_collected=0, clay_collected=0, obsidian_collected=0, geode_collected=0)
         robots = Robots(ore_robots=1, clay_robots=0, obsidian_robots=0, geode_robots=0)
         best_config = BestBlueprintConfiguration(resources, robots, geode_collected=0)
         yield get_blueprint_quality_level(blueprint, resources, robots, best_config)
@@ -270,5 +282,6 @@ def parse_blueprints(path: str) -> Generator[Blueprint, None, None]:
 
 if __name__ == '__main__':
     is_test_mode = True if sys.argv[1] == 'test' else False
+    is_star_two = True if sys.argv[2] == 'star2' else False
     path = 'input.test.txt' if is_test_mode else 'input.txt'
-    main(is_test_mode, path)
+    main(is_test_mode, is_star_two, path)
