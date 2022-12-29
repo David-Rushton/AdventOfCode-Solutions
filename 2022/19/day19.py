@@ -1,4 +1,7 @@
+import dataclasses
 from dataclasses import dataclass
+from enum import Enum
+import math
 import re
 import sys
 from typing import Generator
@@ -6,6 +9,11 @@ from typing import Generator
 
 TIME_LIMIT = 24
 
+class RobotType(Enum):
+    ORE_ROBOT = 0
+    CLAY_ROBOT = 1
+    OBSIDIAN_ROBOT = 2
+    GEODE_ROBOT = 3
 
 @dataclass
 class RobotCost:
@@ -43,6 +51,11 @@ class Resources:
     obsidian_collected: int
     geode_collected: int
 
+@dataclass
+class BestBlueprintConfiguration:
+    resources: Resources
+    robots: Robots
+    geode_collected: int
 
 def main(is_test_mode: bool, path: str) -> None:
     print('\n== Not Enough Minerals ==\n')
@@ -52,30 +65,132 @@ def main(is_test_mode: bool, path: str) -> None:
 
 def get_quality_levels(blueprints: Generator[Blueprint, None, None]) -> Generator[BlueprintQualityLevel, None, None]:
     for blueprint in blueprints:
+        print_blueprint(blueprint)
         resources = Resources(time_remaining=TIME_LIMIT, ore_collected=0, clay_collected=0, obsidian_collected=0, geode_collected=0)
         robots = Robots(ore_robots=1, clay_robots=0, obsidian_robots=0, geode_robots=0)
-        yield get_blueprint_quality_level(blueprint, resources, robots)
+        best_config = BestBlueprintConfiguration(resources, robots, geode_collected=0)
+        yield get_blueprint_quality_level(blueprint, resources, robots, best_config)
 
-def get_blueprint_quality_level(blueprint: Blueprint, resources: Resources, robots: Robots) -> BlueprintQualityLevel:
-    while resources.time_remaining > 0:
+def get_blueprint_quality_level(
+    blueprint: Blueprint,
+    resources: Resources,
+    robots: Robots,
+    best_blueprint_config: BestBlueprintConfiguration,
+    depth: int=0
+) -> BlueprintQualityLevel:
+    # while resources.time_remaining > 0:
 
-        # discard less productive routes early
-        # figure out what robots we can build
-            # include unlocked robots
-                # where unlocked = resource collected per minute < max required per minute
-                # &&
-                # we are mining required build resources
-        # recursively try each unlocked robot
+    # discard less productive routes early
+
+    for robot_type in get_available_robots_types(blueprint.maximum_required_per_minute, robots):
+        time_required = get_time_to_build_robot(robot_type, blueprint, resources, robots)
+
+        if time_required >= resources.time_remaining:
+            if resources.geode_collected > best_blueprint_config.geode_collected:
+                print(f'New best: {resources.geode_collected} ({best_blueprint_config.geode_collected})')
+                best_blueprint_config = BestBlueprintConfiguration(resources, robots, resources.geode_collected)
+            continue
+
+        updated_resources = mine_resources(time_required, resources, robots)
+
+        updated_resources, updated_robots = build_robot(robot_type, blueprint, updated_resources, robots)
+
+        # print(f'time remaining: {updated_resources.time_remaining} | robots: {updated_robots} | depth {depth} | geodes collected: {updated_resources.geode_collected}')
+
+        get_blueprint_quality_level(blueprint, updated_resources, updated_robots, best_blueprint_config, depth + 1)
+
         # once geode cracker is created we can calculate its total lifetime yield
             # we can generate a heuristic best case here for future yield, to filter less productive routes early
                 # heuristic = sum of numbers 1 to time remaining + geodes already collected
 
-        # TODO:
-        # implement above
-
-        pass
-
     return BlueprintQualityLevel(id=blueprint.id, geodes_collected=0, quality_level=0)
+
+def mine_resources(time_passed: int, resources: Resources, robots: Robots) -> Resources:
+    return Resources(
+        time_remaining=resources.time_remaining - time_passed,
+        ore_collected=resources.ore_collected + (time_passed * robots.ore_robots),
+        clay_collected=resources.clay_collected + (time_passed * robots.clay_robots),
+        obsidian_collected=resources.obsidian_collected + (time_passed * robots.obsidian_robots),
+        geode_collected=resources.geode_collected
+    )
+
+def build_robot(
+    robot_type: RobotType, blueprint: Blueprint, resources: Resources, robots: Robots
+) -> tuple[Resources, Robots]:
+    updated_robots = dataclasses.replace(robots)
+    updated_resources = dataclasses.replace(resources)
+
+    if robot_type == RobotType.ORE_ROBOT:
+        updated_resources.ore_collected -= blueprint.ore_robot.ore_required
+        updated_robots.ore_robots += 1
+
+    if robot_type == RobotType.CLAY_ROBOT:
+        updated_resources.ore_collected -= blueprint.clay_robot.ore_required
+        updated_robots.clay_robots += 1
+
+    if robot_type == RobotType.OBSIDIAN_ROBOT:
+        updated_resources.ore_collected -= blueprint.obsidian_robot.ore_required
+        updated_resources.clay_collected -= blueprint.obsidian_robot.clay_required
+        updated_robots.obsidian_robots += 1
+
+    if robot_type == RobotType.GEODE_ROBOT:
+        updated_resources.ore_collected -= blueprint.geode_robot.ore_required
+        updated_resources.obsidian_collected -= blueprint.geode_robot.obsidian_required
+        updated_robots.geode_robots += 1
+        updated_resources.geode_collected += updated_resources.time_remaining - 1
+
+    return (updated_resources, updated_robots)
+
+def get_time_to_build_robot(robot_type: RobotType, blueprint: Blueprint, resources: Resources, robots: Robots) -> int:
+    if robot_type.ORE_ROBOT:
+        if resources.ore_collected < blueprint.ore_robot.ore_required:
+            return math.ceil((blueprint.ore_robot.ore_required - resources.ore_collected) / robots.ore_robots)
+        return 1
+
+    if robot_type.CLAY_ROBOT:
+        if resources.ore_collected < blueprint.clay_robot.ore_required:
+            return math.ceil((blueprint.clay_robot.ore_required - resources.ore_collected) / robots.ore_robots)
+        return 1
+
+    if robot_type.OBSIDIAN_ROBOT:
+        days_until_enough_ore = 0
+        if resources.ore_collected < blueprint.obsidian_robot.ore_required:
+            days_until_enough_ore = math.ceil((blueprint.obsidian_robot.ore_required - resources.ore_collected) / robots.ore_robots)
+
+        days_until_enough_clay = 0
+        if resources.clay_collected < blueprint.obsidian_robot.clay_required:
+            days_until_enough_clay = math.ceil((blueprint.obsidian_robot.clay_required - resources.clay_collected) / robots.clay_robots)
+
+        return max(1, days_until_enough_ore, days_until_enough_clay)
+
+    if robot_type.GEODE_ROBOT:
+        days_until_enough_ore = 0
+        if resources.ore_collected < blueprint.geode_robot.ore_required:
+            days_until_enough_ore = math.ceil((blueprint.geode_robot.ore_required - resources.ore_collected) / robots.ore_robots)
+
+        days_until_enough_obsidian = 0
+        if resources.obsidian_collected < blueprint.geode_robot.obsidian_required:
+            days_until_enough_obsidian = math.ceil((blueprint.geode_robot.obsidian_required - resources.obsidian_collected) / robots.obsidian_robots)
+
+        return max(1, days_until_enough_ore, days_until_enough_obsidian)
+
+def get_available_robots_types(robot_cost: RobotCost, robots: Robots) -> Generator[RobotType, None, None]:
+    """
+    Returns robots we can build and need.
+    We can build a robot if we have the necessary miners.
+    We will build a robot if the amount mined per minute is less the maximum we can spend in a minute.
+    """
+    if robots.ore_robots < robot_cost.ore_required:
+        yield RobotType.ORE_ROBOT
+
+    if robots.clay_robots < robot_cost.clay_required:
+        yield RobotType.CLAY_ROBOT
+
+    if robots.clay_robots > 0 and robots.obsidian_robots < robot_cost.obsidian_required:
+        yield RobotType.OBSIDIAN_ROBOT
+
+    if robots.obsidian_robots > 0:
+        yield RobotType.GEODE_ROBOT
 
 def get_geodes_available(geode_robots: int, time_remaining: int) -> int:
     """
@@ -98,8 +213,8 @@ def print_blueprint(blueprint: Blueprint) -> None:
     print(f'\nBlueprint: {blueprint.id}')
     print(f'- Each ore robot costs {blueprint.ore_robot.ore_required} ore')
     print(f'- Each clay robot costs {blueprint.clay_robot.ore_required} ore')
-    print(f'- Each obsidian robot costs {blueprint.obsidian_robot.ore_required} ore and {blueprint.obsidian_robot.clay_required}')
-    print(f'- Each geode robot costs {blueprint.geode_robot.ore_required} ore and {blueprint.geode_robot.obsidian_required}\n')
+    print(f'- Each obsidian robot costs {blueprint.obsidian_robot.ore_required} ore and {blueprint.obsidian_robot.clay_required} clay')
+    print(f'- Each geode robot costs {blueprint.geode_robot.ore_required} ore and {blueprint.geode_robot.obsidian_required} obsidian\n')
 
 def parse_blueprints(path: str) -> Generator[Blueprint, None, None]:
     # Format:
