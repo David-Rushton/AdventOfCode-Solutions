@@ -12,7 +12,8 @@ def main(path: str):
 
     best_time = RoutePlanner().get_best_time_to_exit(explorer, valley_map, blizzard_map)
 
-    print(f'\n- Best time: {best_time}\n')
+    print(f'\n- Best time: {best_time}')
+    print(f'- Target test time: 18\n')
 
 def parse_initial_state(path: str) -> tuple[ValleyMap, CachedBlizzardMap]:
     y = 0

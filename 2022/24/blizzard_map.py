@@ -19,8 +19,7 @@ class CachedBlizzardMap:
     def get_map(self, time: int) -> dict[Location, str]:
         while time > self._max_time:
             self._advance_time()
-            blizzard_map = self._map_blizzard()
-            self._cache[time] = blizzard_map
+            self._cache[self._max_time] = self._map_blizzard()
 
         return self._cache[time]
 
@@ -42,7 +41,7 @@ class CachedBlizzardMap:
 
                 if blizzard.direction == LEFT:
                     new_location = dataclasses.replace(blizzard.location, x = blizzard.location.x - 1)
-                    if new_location.y == 0:
+                    if new_location.x == 0:
                         new_location = dataclasses.replace(blizzard.location, x = self._max_x - 1)
 
                 if blizzard.direction == RIGHT:
