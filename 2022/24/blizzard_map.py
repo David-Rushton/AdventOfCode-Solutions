@@ -1,6 +1,7 @@
 from data_types import *
 import dataclasses
 
+
 class CachedBlizzardMap:
     def __init__(self) -> None:
         self._blizzards: list[Blizzard] = []

@@ -6,7 +6,7 @@ import sys
 import time
 
 
-SLEEP_INTERVAL = .3
+SLEEP_INTERVAL = 0.01
 
 
 class RoutePlanner:
@@ -15,19 +15,22 @@ class RoutePlanner:
         self._best_history: list[Location] = []
         self._iterations = 0
         self._visited: set[tuple[int, int, int]] = {}
+        self._get_neighbours = None
 
     def get_best_time_to_exit(
         self,
         explorer: Location,
         valley_map: ValleyMap,
         blizzard_map: CachedBlizzardMap,
-        start_time: int=0
+        start_time: int=0,
+        use_reverse_mode=False
     ) -> int:
         self._best_time = sys.maxsize
         self._best_history: list[Location] = []
         self._iterations = 0
         self._visited: set[tuple[int, int, int]] = {}
 
+        self._get_neighbours = self._get_neighbours_reverse if use_reverse_mode else self._get_neighbours_forward
         best_time, history = self._calculate_best_time(explorer, valley_map, blizzard_map, history=[explorer], time=start_time)
         self._print_valley_map(valley_map, explorer, blizzard_map, history)
 
@@ -39,7 +42,8 @@ class RoutePlanner:
         valley_map: ValleyMap,
         blizzard_map: CachedBlizzardMap,
         history: list[Location],
-        time: int
+        time: int,
+        depth=0
     ) -> tuple[int, list[Location]]:
         # if we have already found a better route then stop exploring this one
         if self._best_time < sys.maxsize:
@@ -53,9 +57,6 @@ class RoutePlanner:
             return
         self._visited[key] = True
 
-        # # if the route isn't making progress then stop exploring it
-        if time > 500:
-            return
 
         self._iterations += 1
         print(f'- Best time: {self._best_time} | Current time: {time} | Iteration: {self._iterations}                               \r', end='')
@@ -71,11 +72,18 @@ class RoutePlanner:
                 if valley_map.locations[neighbour] == PATH and neighbour not in current_blizzard_map:
                     new_history = history.copy()
                     new_history.append(neighbour)
-                    self._calculate_best_time(neighbour, valley_map, blizzard_map, new_history, time + 1)
+                    self._calculate_best_time(
+                        neighbour,
+                        valley_map,
+                        blizzard_map,
+                        new_history,
+                        time + 1,
+                        depth + 1
+                        )
 
         return (self._best_time, self._best_history)
 
-    def _get_neighbours(self, location: Location, max_x: int, max_y: int) -> Generator[Location, None, None]:
+    def _get_neighbours_forward(self, location: Location, max_x: int, max_y: int) -> Generator[Location, None, None]:
         # down
         if location.y < max_y:
             yield dataclasses.replace(location, y = location.y + 1)
@@ -84,13 +92,33 @@ class RoutePlanner:
         if location.x < max_x - 1:
             yield dataclasses.replace(location, x = location.x + 1)
 
+        # up
+        if location.y > 0:
+            yield dataclasses.replace(location, y = location.y - 1)
+
         # left
         if location.x > 1:
             yield dataclasses.replace(location, x = location.x - 1)
 
+        # wait
+        yield location
+
+    def _get_neighbours_reverse(self, location: Location, max_x: int, max_y: int) -> Generator[Location, None, None]:
         # up
-        if location.y > 1:
+        if location.y > 0:
             yield dataclasses.replace(location, y = location.y - 1)
+
+        # left
+        if location.x > 1:
+            yield dataclasses.replace(location, x = location.x - 1)
+
+        # down
+        if location.y < max_y:
+            yield dataclasses.replace(location, y = location.y + 1)
+
+        # right
+        if location.x < max_x - 1:
+            yield dataclasses.replace(location, x = location.x + 1)
 
         # wait
         yield location
@@ -110,7 +138,7 @@ class RoutePlanner:
                 print(f'\033[{valley_map.max_y + 5}A')
 
             blizzards = blizzard_map.get_map(max(force_time, z))
-            print(f'\nMinute: {z}\n')
+            print(f'\n- Minute: {z}\n')
 
             for y in range(valley_map.max_y + 1):
                 for x in range(valley_map.max_x + 1):

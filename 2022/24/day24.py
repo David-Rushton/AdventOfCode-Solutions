@@ -17,12 +17,17 @@ def main(is_star_two: bool, path: str):
             swap_entry_and_exit(valley_map)
 
         explorer = valley_map.entry
-        best_time = route_planner.get_best_time_to_exit(explorer, valley_map, blizzard_map, start_time=best_time)
+        use_reverse_mode = iteration == 1
+        best_time = route_planner.get_best_time_to_exit(
+            explorer,
+            valley_map,
+            blizzard_map,
+            start_time=best_time,
+            use_reverse_mode=use_reverse_mode
+        )
         total_best_time += best_time
 
         print(f'- Best time {iteration + 1}: {best_time}')
-
-    print(f'-Total best time: {total_best_time}')
     print()
 
 def swap_entry_and_exit(valley_map: ValleyMap) -> None:
@@ -51,8 +56,6 @@ def parse_initial_state(path: str) -> tuple[ValleyMap, CachedBlizzardMap]:
         y += 1
     max_y = y - 1
 
-    # Start cell is always 1, 0
-    # End cell is always 1 to the right of the bottom right corner
     valley_map = ValleyMap(
         entry=Location(1, 0),
         exit=Location(max_x - 1, max_y),
