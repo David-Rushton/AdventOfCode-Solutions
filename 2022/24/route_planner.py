@@ -6,7 +6,7 @@ import sys
 import time
 
 
-SLEEP_INTERVAL = .01
+SLEEP_INTERVAL = .3
 
 
 class RoutePlanner:
@@ -28,7 +28,7 @@ class RoutePlanner:
         self._iterations = 0
         self._visited: set[tuple[int, int, int]] = {}
 
-        best_time, history = self._calculate_best_time(explorer, valley_map, blizzard_map, history=[explorer], time=0)
+        best_time, history = self._calculate_best_time(explorer, valley_map, blizzard_map, history=[explorer], time=start_time)
         self._print_valley_map(valley_map, explorer, blizzard_map, history)
 
         return best_time
@@ -66,23 +66,12 @@ class RoutePlanner:
                 self._best_time = time
                 self._best_history = history
         else:
-            routes_explored = 0
-            while routes_explored == 0:
-                for neighbour in self._get_neighbours(explorer, valley_map.max_x, valley_map.max_y):
-                    current_blizzard_map = blizzard_map.get_map(time + 1)
-                    if valley_map.locations[neighbour] == PATH and neighbour not in current_blizzard_map:
-                        routes_explored += 1
-                        new_history = history.copy()
-                        new_history.append(neighbour)
-                        self._calculate_best_time(neighbour, valley_map, blizzard_map, new_history, time + 1)
-
-                # we have nowhere to go.
-                # if a blizzard moves into our cell this route has failed
-                if explorer in current_blizzard_map:
-                    return
-
-                history.append(explorer)
-                time += 1
+            current_blizzard_map = blizzard_map.get_map(time + 1)
+            for neighbour in self._get_neighbours(explorer, valley_map.max_x, valley_map.max_y):
+                if valley_map.locations[neighbour] == PATH and neighbour not in current_blizzard_map:
+                    new_history = history.copy()
+                    new_history.append(neighbour)
+                    self._calculate_best_time(neighbour, valley_map, blizzard_map, new_history, time + 1)
 
         return (self._best_time, self._best_history)
 
@@ -138,14 +127,12 @@ class RoutePlanner:
                         cell = '\033[1;30;103mE\033[0m'
 
                     if current_location in history[0:z + 1]:
-                        cell = '\033[1;30;101m-\033[0m'
+                        cell = '\033[1;30;101m \033[0m'
 
                     if current_location in history[z:z + 1]:
-                        if current_location in blizzards:
-                            cell = '\033[1;30;101mX\033[0m'
-                        else:
-                            cell = '\033[1;30;103mE\033[0m'
+                        cell = '\033[1;30;103mE\033[0m'
 
                     print(cell, end='')
                 print()
             time.sleep(SLEEP_INTERVAL)
+        print()

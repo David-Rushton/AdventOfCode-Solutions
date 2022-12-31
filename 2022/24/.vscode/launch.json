@@ -12,7 +12,8 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "test"
+                "test",
+                "star2"
             ]
         }
     ]
