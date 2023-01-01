@@ -17,11 +17,10 @@ class MixNumber:
 
 def main(is_test_mode: bool, is_star_two: bool, path: str):
     elements = read_mix_file(is_star_two, path)
-    indexed_by_starting_position: dict[int, MixNumber] = elements[0]
     mix_numbers: list[MixNumber] = elements[1]
     original_order = mix_numbers.copy()
+    round_limit = 10 if is_star_two else 1
     round = 0
-    round_limit = 1 if is_star_two else 1
 
     print('== Decrypting Mix File ==\n')
 
@@ -36,7 +35,6 @@ def main(is_test_mode: bool, is_star_two: bool, path: str):
             source = original_order[index]
             source_index = get_current_index(source, mix_numbers, index)
             target_index = get_index_offset(source_index, source.value, len(mix_numbers))
-            target = mix_numbers[target_index]
 
             print(f'    - Source index {source_index}')
             print(f'    - Target index {target_index}')
@@ -45,9 +43,10 @@ def main(is_test_mode: bool, is_star_two: bool, path: str):
             if source.value != 0:
                 mix_numbers.insert(target_index, mix_numbers.pop(source_index))
 
-            print(f'    - New order: ', end='')
-            for x in mix_numbers:
-                print(x.value, end=', ')
+            if is_test_mode:
+                print(f'    - New order: ', end='')
+                for x in mix_numbers:
+                    print(x.value, end=', ')
 
             print()
             print()
@@ -71,18 +70,7 @@ def get_mix_number_zero_index(mix_numbers: list[MixNumber]) -> int:
             return index
 
 def get_index_offset(index: int, offset: int, array_length: int, disable_wraps: bool=False) -> int:
-
-    if disable_wraps:
-        wraps = 0
-    else:
-        wraps = math.floor((index + offset) / array_length)
-
-    result = (index + offset + wraps) % array_length
-
-    if result == 0 and offset < 0:
-        result = array_length - 1
-
-    return result
+        return (index + offset) % (array_length - 1)
 
 def get_current_index(mix_number: MixNumber, mix_numbers: list[MixNumber], start_from_index: int):
     offset_seed = 0
@@ -92,9 +80,6 @@ def get_current_index(mix_number: MixNumber, mix_numbers: list[MixNumber], start
             if mix_numbers[offset] == mix_number:
                 return offset
             offset_seed += 1
-
-            if offset_seed % 100 == 0:
-                print(f'      - Large offset detected: {offset_seed}')
 
 def read_mix_file(is_star_two: bool, path: str) -> Tuple[dict[int, MixNumber], list[MixNumber]]:
 
@@ -126,10 +111,6 @@ def read_mix_file(is_star_two: bool, path: str) -> Tuple[dict[int, MixNumber], l
     indexed_by_starting_position[0].last = indexed_by_starting_position[id_seed]
 
     return (indexed_by_starting_position, mix_numbers)
-
-def print_ex(message: str = ''):
-    if IS_VERBOSE_MODE:
-        print(message)
 
 if __name__ == '__main__':
     is_test_mode = sys.argv[1] == 'test'
