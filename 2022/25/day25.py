@@ -30,11 +30,13 @@ class SnafuNumber:
 def main(is_test_mode: bool, path: str):
     snafu_numbers = list(parse_snafu_numbers(path))
 
+    running_total_decimal = 0
     for snafu_number in snafu_numbers:
         snafu_number.decimal = convert_from_snafu(snafu_number.snafu)
-        snafu_number.hint = convert_to_snafu(snafu_number.decimal)
+        running_total_decimal += snafu_number.decimal
 
-    print_snafu_numbers(snafu_numbers)
+    running_total_snafu = convert_to_snafu(running_total_decimal)
+    print_snafu_numbers(snafu_numbers, running_total_snafu)
 
 def convert_to_snafu(decimal: int) -> str:
     multiplier = 1
@@ -43,20 +45,14 @@ def convert_to_snafu(decimal: int) -> str:
     while multiplier * 2 < decimal:
         multiplier *= 5
 
-    running_total = 0
     remaining = decimal
     while multiplier >= 1:
-        if remaining > 0:
-            decimal_digit = math.floor(max(multiplier, remaining) / min(multiplier, remaining))
-        else:
-            decimal_digit = math.floor(min(multiplier, remaining) / max(multiplier, remaining))
+        decimal_digit = round(remaining / multiplier)
         decimal_digits.append(DECIMAL_DIGITS[decimal_digit])
-        running_total += multiplier * decimal_digit
-        remaining = decimal - running_total
+        remaining -= (decimal_digit * multiplier)
         multiplier /= 5
 
-
-    return ''.join(decimal_digits[::-1])
+    return ''.join(decimal_digits)
 
 def convert_from_snafu(snafu: str) -> int:
     multiplier = 1
@@ -68,16 +64,18 @@ def convert_from_snafu(snafu: str) -> int:
 
     return result
 
-def print_snafu_numbers(snafu_numbers: list[SnafuNumber]) -> None:
+def print_snafu_numbers(snafu_numbers: list[SnafuNumber], total: str) -> None:
     print()
-    print('+--------------------+--------------------+--------------------+')
-    print('| decimal            | snafu              | hint               |')
-    print('+--------------------+--------------------+--------------------+')
+    print('+----------------------+----------------------+----------------------+')
+    print('| decimal              | snafu                | hint                 |')
+    print('+----------------------+----------------------+----------------------+')
 
     for snafu_number in snafu_numbers:
-        print(f'| {str(snafu_number.decimal).rjust(18)} | {snafu_number.snafu.rjust(18)} | {snafu_number.hint.rjust(18)} |')
+        print(f'| {str(snafu_number.decimal).rjust(20)} | {snafu_number.snafu.rjust(20)} | {snafu_number.hint.rjust(20)} |')
 
-    print('+--------------------+--------------------+--------------------+')
+    print( '+----------------------+----------------------+----------------------+')
+    print(f'| Total: {total.ljust(59)} |')
+    print( '+--------------------------------------------------------------------+')
     print()
 
 def parse_snafu_numbers(path: str) -> Generator[SnafuNumber, None, None]:
