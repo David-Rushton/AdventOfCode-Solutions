@@ -26,18 +26,14 @@ def main(is_test_mode: bool, is_star_two: bool, path: str):
 
     for round in range(round_limit):
         print(f'  - Round: {round +  1}')
-        print(f'  - Initial: {original_order[0].value}, {original_order[1].value}, {original_order[2].value}, {original_order[3].value}, {original_order[4].value}, {original_order[5].value}, {original_order[6].value}\n')
+        print(f'  - Initial: {original_order[0].value}, {original_order[1].value}, {original_order[2].value}, {original_order[3].value}, {original_order[4].value}, {original_order[5].value}, {original_order[6].value}')
 
         for index in range(len(original_order)):
-
-            print(f'  - Decrypted item {index + 1} of {len(mix_numbers)}: {original_order[index].value}')
-
+            percent = int((index / len(original_order)) * 100)
+            print(f'  - {percent}%           \r', end='')
             source = original_order[index]
             source_index = get_current_index(source, mix_numbers, index)
             target_index = get_index_offset(source_index, source.value, len(mix_numbers))
-
-            print(f'    - Source index {source_index}')
-            print(f'    - Target index {target_index}')
 
             # reorder array
             if source.value != 0:
@@ -48,20 +44,17 @@ def main(is_test_mode: bool, is_star_two: bool, path: str):
                 for x in mix_numbers:
                     print(x.value, end=', ')
 
-            print()
-            print()
-
         coordinates = 0
         index_of_zero = get_mix_number_zero_index(mix_numbers)
-        print(f'  - Searching for coordinates')
+        print()
+        print()
 
-        for offset in (1000, 2000, 3000):
-            index = get_index_offset(index_of_zero, offset, len(mix_numbers), disable_wraps=True)
-            print(f'  - {offset}th number after 0 is {mix_numbers[index].value} ({index})')
-            coordinates += mix_numbers[index].value
+    for offset in (1000, 2000, 3000):
+        index = get_index_offset(index_of_zero, offset, len(mix_numbers), disable_wraps=True)
+        print(f'  - {offset}th number after 0 is {mix_numbers[index].value}')
+        coordinates += mix_numbers[index].value
 
         print(f'  - Coordinates {coordinates}\n')
-
     exit(0)
 
 def get_mix_number_zero_index(mix_numbers: list[MixNumber]) -> int:
@@ -70,7 +63,10 @@ def get_mix_number_zero_index(mix_numbers: list[MixNumber]) -> int:
             return index
 
 def get_index_offset(index: int, offset: int, array_length: int, disable_wraps: bool=False) -> int:
-        return (index + offset) % (array_length - 1)
+        if disable_wraps:
+            return (index + offset) % array_length
+        else:
+            return (index + offset) % (array_length - 1)
 
 def get_current_index(mix_number: MixNumber, mix_numbers: list[MixNumber], start_from_index: int):
     offset_seed = 0
@@ -82,7 +78,6 @@ def get_current_index(mix_number: MixNumber, mix_numbers: list[MixNumber], start
             offset_seed += 1
 
 def read_mix_file(is_star_two: bool, path: str) -> Tuple[dict[int, MixNumber], list[MixNumber]]:
-
     indexed_by_starting_position: dict[int, MixNumber] = {}
     mix_numbers: list[MixNumber] = []
     id_seed = -1
