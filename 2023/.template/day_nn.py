@@ -1,4 +1,6 @@
 import sys
+from dataclasses import dataclass
+from typing import Iterator
 
 
 def main(is_test_mode: bool) -> None:
