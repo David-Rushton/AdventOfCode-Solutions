@@ -35,7 +35,7 @@ def main(is_test_mode: bool) -> None:
     print()
     print()
 
-best = 800
+best = 2000
 def find_best_route_3(map: dict[Point, Cell], destination: Point):
     global best
     start = Point(0, 0)
@@ -60,11 +60,13 @@ def find_best_route_3(map: dict[Point, Cell], destination: Point):
         if heat_loss > best:
             continue
 
-        for _ in range(3):
+        for i in range(10):
             point = Point(point.x + x_offsets[direction], point.y + y_offsets[direction])
             if point not in map:
                 break
             heat_loss += map[point].heat_loss
+            if i < 3:
+                continue
             for turn in turns[direction]:
                 if heat_loss < cache[point][turn]:
                     cache[point][turn] = heat_loss
