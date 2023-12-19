@@ -14,6 +14,8 @@ class Cell:
     location: Location
     pipe: str
     steps: int
+    enclosed: bool
+    is_enclosed: bool
 
 
 def main(is_test_mode: bool) -> None:
@@ -33,16 +35,56 @@ def main(is_test_mode: bool) -> None:
                     connection.steps = steps
                     cells_to_check.append(connection)
 
+    # HACK: we use steps elsewhere to determine the main pipe from others.
+    cells[start].steps = 1
+
+    enclosed = count_enclosed(cells)
+
     last_y = 0
     for cell in cells:
         if cell.y != last_y:
             last_y = cell.y
             print()
-        value = str(cells[cell].steps) if cells[cell].pipe != '.' else '.'
+        value = cells[cell].pipe if cells[cell].steps > 0 else '.'
+        value = '@' if cells[cell].is_enclosed else value
+        if cells[cell].enclosed == True:
+            value = 'I'
         print(value, end='')
 
     print()
     print(f'max steps {max(cells[cell].steps for cell in cells if cells[cell].steps > 0)}')
+    print(f'enclosed {enclosed}')
+
+
+def count_enclosed(cells: dict[Location, Cell]) -> int:
+    max_x = max(loc.x for loc in cells)
+    max_y = max(loc.y for loc in cells)
+    result = 0
+    for y in range(max_y + 1):
+        is_inside = False
+        for x in range(max_x + 1):
+            if cells[Location(x, y)].steps > 0:
+                value = cells[Location(x, y)].pipe
+                if value == '|':
+                    is_inside = not is_inside
+                if value == '-':
+                    pass
+                if value == 'L':
+                    is_inside = not is_inside
+                if value == 'J':
+                    is_inside = not is_inside
+                if value == '7':
+                    is_inside = not is_inside
+                if value == 'F':
+                    is_inside = not is_inside
+                if value == 'S':
+                    is_inside = not is_inside
+                if value == '.':
+                    pass
+            if is_inside and cells[Location(x, y)].steps == 0:
+                result += 1
+                cells[Location(x, y)].enclosed = True
+    return result
 
 
 def get_start_connector(start: Location, cells: dict[Location, Cell]) -> str:
@@ -117,7 +159,7 @@ def get_input(get_test: bool) -> tuple[Location, dict[Location, Cell]]:
     for y in range(0, len(rows)):
         for x in range(0, len(rows[y])):
             location = Location(x, y)
-            cells[location] = Cell(location, rows[y][x], 0)
+            cells[location] = Cell(location, rows[y][x], 0, False, False)
             if rows[y][x] == 'S':
                 start = location
     return (start, cells)
