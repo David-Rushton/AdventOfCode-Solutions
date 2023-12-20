@@ -5,17 +5,14 @@ from typing import Iterator
 
 @dataclass
 class Range:
-    starting: int
-    ending: int
-    length: int
+    start: int
+    end: int
 
 
 @dataclass
 class LookupRange:
-    id: int
-    destination_range: int
-    source_range: int
-    range_length: int
+    source: Range
+    destination: Range
 
 
 @dataclass
@@ -25,107 +22,97 @@ class Lookup:
 
 
 def main(is_test_mode: bool) -> None:
-    is_test_mode = True
-    (seeds, lookups) = get_input(is_test_mode)
-
     print('seed to soil lookup')
     print('-------------------')
     print()
 
-    seed_ranges: list[Range] = []
-    for i, value in enumerate(seeds):
-        if i % 2 == 1:
-            seed_ranges.append(Range(
-                seeds[i - 1],
-                seeds[i - 1] + value - 1,
-                value))
+    (seeds, lookups) = get_input(is_test_mode)
+
+    print(' seeds:')
+    for seed in sorted(seeds, key=lambda s: s.start):
+        print_range(seed)
+    print()
 
     for lookup in lookups:
-        print(lookup.name)
-
-        temp_range: list[Range] = []
-        for seed_range in seed_ranges:
-            print_range(seed_range)
-            for lu_range in lookup.ranges:
-                temp_range.extend(split_range(seed_range, to_range(lu_range)))
-
-        print(f't {len(temp_range)}')
-        for r in temp_range:
-            print_range(r)
-
-
-        seed_range = temp_range
+        print(f' {lookup.name}')
+        seeds_updated: list[Range] = []
+        for lookup_range in lookup.ranges:
+            print_lookup_range(lookup_range)
+            seeds_to_check = seeds.copy()
+            seeds_checked: list[Range] = []
+            while(len(seeds_to_check) > 0):
+                seed = seeds_to_check.pop()
+                for (seed_intersection, is_updated) in get_intersections(seed, lookup_range):
+                    if is_updated:
+                        seeds_updated.append(seed_intersection)
+                    else:
+                        seeds_checked.append(seed_intersection)
+            seeds = seeds_checked
+        print(' seeds:')
+        seeds.extend(seeds_updated)
+        for seed in sorted(seeds, key=lambda r: r.start):
+            print_range(seed)
         print()
 
-
-    print()
     print('-------------------')
-    print(f'Lowest location number: {min(seeds)}')
+    print(f'Lowest location number: {min(seed.start for seed in seeds)}')
 
 
-def print_range(range: Range) -> None:
-    print(f' seed: {range.starting} -> {range.starting +  range.length}')
+def print_lookup_range(range: LookupRange) -> None:
+    print(f'  {range.source.start} -> {range.source.end} = {range.destination.start} -> {range.destination.end}')
 
 
-def print_lookup(range: LookupRange) -> None:
-    print(f' range: {range.source_range} -> {range.source_range + range.range_length} : {range.destination_range} -> {range.destination_range +  range.range_length}')
+def print_range(range: Range, end: str='\n') -> None:
+    print(f'  {range.start} -> {range.end}', end=end)
 
 
-def split_range(source_range: Range, target_range: Range) -> Iterator[Range]:
-    # before
-    if source_range.starting <= target_range.starting:
-        start = source_range.starting
-        end = min(source_range.ending, target_range.starting - 1)
-        yield Range(start, end, end - source_range.starting)
-
-    # overlap
-    if source_range.ending >= target_range.starting and source_range.starting < target_range.ending:
-        start = max(source_range.starting, target_range.starting)
-        end = min(source_range.ending, target_range.ending)
-        yield Range(start, end, end - start)
-
-    # after
-    if source_range.ending > target_range.ending:
-        start = max(source_range.starting, target_range.ending)
-        end = source_range.ending
-        yield(start, end, end - start)
+def get_intersections(seeds: Range, lookup_range: LookupRange) -> Iterator[tuple[Range, bool]]:
+    left = seeds
+    right = lookup_range.source
+    if left.start < right.start:
+        yield (Range(left.start, min(left.end, right.start - 1)), False)
+    if left.end > right.start and left.start < right.end:
+        new_range = Range(max(left.start, right.start), min(left.end, right.end))
+        yield (apply_lookup_range(new_range, lookup_range), True)
+    if left.end >= right.end:
+        yield (Range(max(left.start, right.end), max(left.end, right.end)), False)
 
 
-def ending(range: Range) -> int:
-    return range.starting + range.length - 1
+def apply_lookup_range(range: Range, lookup_range: LookupRange) -> Range:
+    offset = range.start - lookup_range.source.start
+    width = range.end - range.start
+    r = Range(
+        lookup_range.destination.start + offset,
+        lookup_range.destination.start + offset + width)
+    print(f'    {range.start}x{range.end} -> {r.start}x{r.end}')
+    return r
 
 
-def to_range(lookup_range: LookupRange) -> Range:
-    return Range(
-        lookup_range.source_range,
-        lookup_range.source_range + lookup_range.range_length - 1,
-        lookup_range.range_length)
-
-
-def get_input(get_test: bool) -> tuple[list[int], list[Lookup]]:
+def get_input(get_test: bool) -> tuple[list[Range], list[Lookup]]:
     test_path = './input.test.txt'
     prod_path = './input.txt'
     path = test_path if get_test else prod_path
     lines = open(path, 'rt').read().splitlines()
 
     seeds = [int(number) for number in lines[0].split(':')[1].split(' ') if number.isdigit()]
-    lookups: list[Lookup] = []
-    id = 0
+    seed_ranges: list[Range] = []
+    for i in range(1, len(seeds), 2):
+        seed_ranges.append(Range(seeds[i - 1], seeds[i - 1] + seeds[i]))
 
+    lookups: list[Lookup] = []
     for line in lines[1::]:
         if line == '':
             continue
-
         if line.endswith(':'):
             lookups.append(Lookup(line, []))
-
         if line[0].isdigit():
             values = [int(number) for number in line.split(' ') if number.isdigit()]
-            id += 1
-            range = LookupRange(id, values[0], values[1], values[2])
-            lookups[-1].ranges.append(range)
+            lookups[-1].ranges.append(
+                LookupRange(
+                    Range(values[1], values[1] + values[2]),
+                    Range(values[0], values[0] + values[2])))
 
-    return (seeds, lookups)
+    return (seed_ranges, lookups)
 
 
 if __name__ == '__main__':
