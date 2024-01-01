@@ -38,53 +38,17 @@ def main(is_test_mode: bool) -> None:
     # HACK: we use steps elsewhere to determine the main pipe from others.
     cells[start].steps = 1
 
-    enclosed = count_enclosed(cells)
+    print_cells(cells)
 
-    last_y = 0
-    for cell in cells:
-        if cell.y != last_y:
-            last_y = cell.y
-            print()
-        value = cells[cell].pipe if cells[cell].steps > 0 else '.'
-        value = '@' if cells[cell].is_enclosed else value
-        if cells[cell].enclosed == True:
-            value = 'I'
-        print(value, end='')
+    stretched_cells = stretch(cells)
+    stretched_start = get_internal_cell(stretched_cells)
+    flood_fill(stretched_start, stretched_cells)
+    enclosed_cells = count_enclosed(stretched_cells)
+    print_cells(stretched_cells)
 
     print()
     print(f'max steps {max(cells[cell].steps for cell in cells if cells[cell].steps > 0)}')
-    print(f'enclosed {enclosed}')
-
-
-def count_enclosed(cells: dict[Location, Cell]) -> int:
-    max_x = max(loc.x for loc in cells)
-    max_y = max(loc.y for loc in cells)
-    result = 0
-    for y in range(max_y + 1):
-        is_inside = False
-        for x in range(max_x + 1):
-            if cells[Location(x, y)].steps > 0:
-                value = cells[Location(x, y)].pipe
-                if value == '|':
-                    is_inside = not is_inside
-                if value == '-':
-                    pass
-                if value == 'L':
-                    is_inside = not is_inside
-                if value == 'J':
-                    is_inside = not is_inside
-                if value == '7':
-                    is_inside = not is_inside
-                if value == 'F':
-                    is_inside = not is_inside
-                if value == 'S':
-                    is_inside = not is_inside
-                if value == '.':
-                    pass
-            if is_inside and cells[Location(x, y)].steps == 0:
-                result += 1
-                cells[Location(x, y)].enclosed = True
-    return result
+    print(f'enclosed {enclosed_cells}')
 
 
 def get_start_connector(start: Location, cells: dict[Location, Cell]) -> str:
@@ -96,6 +60,91 @@ def get_start_connector(start: Location, cells: dict[Location, Cell]) -> str:
                 if connection.location == start:
                     connections.append(Location(location.x - start.x, location.y - start.y))
     return get_connecting_pipe(connections)
+
+
+def get_internal_cell(cells: dict[Location, Cell]) -> Location:
+    for cell in cells:
+        if cells[cell].pipe == 'F' and cells[cell].steps > 0:
+            return Location(cell.x + 1, cell.y + 1)
+
+
+def flood_fill(start: Location, cells: dict[Location, Cell]) -> None:
+    q: list[Location] = [start]
+    visited: set[Location] = set()
+    while len(q) > 0:
+        current = q.pop(0)
+        cells[current].pipe = '#'
+        if current in visited:
+            continue
+        for offset in [(0, -1), (1, 0), (0, 1), (-1, 0)]:
+            next = Location(current.x + offset[0], current.y + offset[1])
+            if next in visited:
+                continue
+            if cells[next].pipe == '.':
+                q.append(next)
+        visited.add(current)
+
+
+def count_enclosed(cells: dict[Location, Cell]) -> int:
+    result = 0
+    for cell in cells:
+        if cell.x % 2 == 0 and cell.y % 2 == 0:
+            if cells[cell].pipe == '#':
+                cells[cell].pipe = 'I'
+                result += 1
+    return result
+
+
+def print_cells(cells: dict[Location, Cell]) -> None:
+    last_y = 0
+    for cell in sorted(cells, key=lambda k: k.y * 1_000_000 + k.x):
+        if cell.y != last_y:
+            last_y = cell.y
+            print()
+        value = cells[cell].pipe
+        print(value, end='')
+    print()
+    print()
+
+
+def stretch(cells: dict[Location, Cell]) -> dict[Location, Cell]:
+    return stretch_vertical(stretch_horizontal(cells))
+
+
+def stretch_vertical(cells: dict[Location, Cell]) -> dict[Location, Cell]:
+    m = {
+        '|': '|',
+        '-': '.',
+        'L': '.',
+        'J': '.',
+        '7': '|',
+        'F': '|',
+        'S': 'S',
+        '.': '.'}
+    result: dict[Location, cell] = {}
+    for cell in cells:
+        value = '.' if cells[cell].steps == 0 else cells[cell].pipe
+        result[Location(cell.x, cell.y * 2)] = Cell(Location(cell.x, cell.y * 2), value, cells[cell].steps, False, False)
+        result[Location(cell.x, cell.y * 2 + 1)] = Cell(Location(cell.x, cell.y * 2 + 1), m[value], cells[cell].steps, False, False)
+    return result
+
+
+def stretch_horizontal(cells: dict[Location, Cell]) -> dict[Location, Cell]:
+    m = {
+        '|': '.',
+        '-': '-',
+        'L': '-',
+        'J': '.',
+        '7': '.',
+        'F': '-',
+        'S': 'S',
+        '.': '.'}
+    result: dict[Location, cell] = {}
+    for cell in cells:
+        value = '.' if cells[cell].steps == 0 else cells[cell].pipe
+        result[Location(cell.x * 2, cell.y)] = Cell(Location(cell.x * 2, cell.y), value, cells[cell].steps, False, False)
+        result[Location(cell.x * 2 + 1, cell.y)] = Cell(Location(cell.x * 2 + 1, cell.y), m[value], cells[cell].steps, False, False)
+    return result
 
 
 def get_connections(start: Cell, cells: dict[Location, Cell]) -> list[Cell]:
@@ -148,6 +197,7 @@ def get_connecting_pipe(offsets: list[Location]) -> str:
         return '7'
     if south in offsets and east in offsets:
         return 'F'
+
 
 def get_input(get_test: bool) -> tuple[Location, dict[Location, Cell]]:
     test_path = './input.test.txt'
