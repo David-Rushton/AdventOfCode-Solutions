@@ -33,9 +33,8 @@ def get_arrangements(pattern: str, level: int=0, result: list[str]=[]) -> list[s
     else:
         get_arrangements(pattern.replace('?', '.', 1), level + 1, result)
         get_arrangements(pattern.replace('?', '#', 1), level + 1, result)
-
-
     return result
+
 
 def get_damaged_groups(pattern: str) -> Iterator[int]:
     for group in pattern.split('.'):
