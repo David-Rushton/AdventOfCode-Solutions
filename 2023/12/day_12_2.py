@@ -15,39 +15,83 @@ def main(is_test_mode: bool) -> None:
 
     arrangement_count = 0
     reports = get_input(is_test_mode)
+    print('  a   b  extend')
+    print(' --- --- ------')
     for report in reports:
-        unfolded_report = unfold_report(report)
-        print(f' {report.pattern}', end='')
+        a = get_arrangement_count(f'{report.pattern}', report.damaged_groups)
+        if report.pattern.endswith('.'):
+            b = get_arrangement_count(f'?{report.pattern}', report.damaged_groups)
+        else:
+            b = get_arrangement_count(f'{report.pattern}?', report.damaged_groups)
 
-        for arrangement in get_arrangements(unfolded_report.pattern, unfolded_report.damaged_groups, level=0, result=[]):
-            if list(get_damaged_groups(arrangement)) == unfolded_report.damaged_groups:
-                arrangement_count += 1
-
-        print(f' {arrangement_count}')
+        print(f' {str(len(a)).rjust(3)} {str(len(b)).rjust(3)} {str(len(a) * len(b) * len(b) * len(b) * len(b)).rjust(6)}')
+        arrangement_count += len(a) * len(b) * len(b) * len(b) * len(b)
 
     print()
     print(f'arrangement count: {arrangement_count}')
 
 
-def get_arrangements(pattern: str, damaged_groups: list[int], level: int=0, result: list[str]=[]) -> list[str]:
-    current_damaged_groups = list(get_damaged_groups(pattern))
-    if len(current_damaged_groups) > 0:
-        if current_damaged_groups != damaged_groups[0:len(current_damaged_groups)]:
-            return result
+def get_arrangement_count(pattern: str, damaged_groups: list[int]) -> list[str]:
+    result: list[str] = []
 
-    if pattern.find('?', level) == -1:
-        result.append(pattern)
-    else:
-        get_arrangements(pattern.replace('?', '#', 1), damaged_groups, level + 1, result)
-        get_arrangements(pattern.replace('?', '.', 1), damaged_groups, level + 1, result)
+    q: list[str] = ['']
+    sum_damaged_groups = sum(damaged_groups)
+    total_matches = 0
+    iterations = 0
+    while len(q) > 0:
+        iterations += 1
+        current = q.pop(0)
+
+        if len(current) == len(pattern):
+            if equals_damaged_groups(current, damaged_groups):
+                result.append(current)
+                total_matches += 1
+            continue
+
+        next = pattern[len(current)]
+        if next == '?':
+            options = ['#', '.']
+        else:
+            options = [next]
+        for option in options:
+            candidate = f'{current}{option}'
+
+            damaged = f'{candidate}{pattern[len(candidate):]}'.count('#')
+            if damaged > sum_damaged_groups:
+                continue
+
+            if matches_damaged_groups(candidate, damaged_groups, len(pattern)):
+                q.append(candidate)
 
     return result
 
 
+def matches_damaged_groups(pattern: str, damaged_groups: list[int], limit: int) -> bool:
+    pattern_damaged_groups = ([len(s) for s in pattern.split('.') if len(s) > 0])
+    required = len(pattern) + sum(damaged_groups[len(pattern_damaged_groups):]) + len(damaged_groups[len(pattern_damaged_groups):]) - 1
+    if required > limit:
+        return False
+
+    if len(pattern_damaged_groups) == 0:
+        return True
+    elif len(pattern_damaged_groups) > len(damaged_groups):
+        return False
+    elif len(pattern_damaged_groups) == 1:
+        return pattern_damaged_groups[0] <= damaged_groups[0]
+    else:
+        return pattern_damaged_groups[:-1] == damaged_groups[:len(pattern_damaged_groups) - 1] \
+            and pattern_damaged_groups[-1] <= damaged_groups[len(pattern_damaged_groups) - 1]
+
+
+def equals_damaged_groups(pattern: str, damaged_groups: list[int]) -> bool:
+    current_damaged_groups = ([len(s) for s in pattern.split('.') if len(s) > 0])
+    return current_damaged_groups == damaged_groups
+
+
 def unfold_report(report: Report) -> Report:
     return Report(
-        '?'.join([report.pattern, report.pattern, report.pattern, report.pattern, report.pattern]),
-        report.damaged_groups * 5)
+        '?'.join([report.pattern, report.pattern]), #report.pattern, report.pattern, report.pattern]),
+        report.damaged_groups * 2)
 
 
 def get_damaged_groups(pattern: str) -> Iterator[int]:
