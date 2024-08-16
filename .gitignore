@@ -3,6 +3,8 @@
 *txt.test
 *.input.txt
 *Input.txt
+*.input.*.txt
+*Input.*.txt
 *sample.txt
 input.txt
 Input.txt
