@@ -17,12 +17,12 @@ func getState() AocState {
 
 	// Star one, unless stated.
 	star := StarOne
-	if slices.Contains(os.Args, "--star-two") || slices.Contains(os.Args, "--star-2") {
+	if slices.Contains(os.Args, "--star-two") || slices.Contains(os.Args, "-2") {
 		star = StarTwo
 	}
 
-	// Mode.
-	testMode := slices.Contains(os.Args, "--test")
+	// Test Mode.
+	testMode := slices.Contains(os.Args, "--test") || slices.Contains(os.Args, "-t")
 
 	// Input path.
 	inputPath := path.Join(".", "cmd", fmt.Sprintf("day%02d", day))
@@ -34,12 +34,12 @@ func getState() AocState {
 
 	// Everyting we need to get started.
 	return AocState{
-		Day:       day,
-		Star:      star,
-		DebugMode: slices.Contains(os.Args, "--verbose") || slices.Contains(os.Args, "-v"),
-		TestMode:  testMode,
-		InputPath: inputPath,
-		Input:     input(inputPath),
+		Day:         day,
+		Star:        star,
+		VerboseMode: slices.Contains(os.Args, "--verbose") || slices.Contains(os.Args, "-v"),
+		TestMode:    testMode,
+		InputPath:   inputPath,
+		Input:       input(inputPath),
 	}
 }
 

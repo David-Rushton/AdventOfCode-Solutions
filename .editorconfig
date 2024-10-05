@@ -18,6 +18,5 @@ charset = unset
 trim_trailing_whitespace = unset
 insert_final_newline = unset
 
-
 [*.md]
 trim_trailing_whitespace = false

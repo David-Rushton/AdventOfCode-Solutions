@@ -10,12 +10,12 @@ const (
 )
 
 type AocState struct {
-	Day       int
-	Star      AocStar
-	DebugMode bool
-	TestMode  bool
-	InputPath string
-	Input     []string
+	Day         int
+	Star        AocStar
+	VerboseMode bool
+	TestMode    bool
+	InputPath   string
+	Input       []string
 }
 
 func (ae AocState) String() string {
@@ -24,6 +24,6 @@ func (ae AocState) String() string {
 		ae.Day,
 		ae.Star,
 		ae.TestMode,
-		ae.DebugMode,
+		ae.VerboseMode,
 		ae.InputPath)
 }
