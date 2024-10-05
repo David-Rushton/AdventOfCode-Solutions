@@ -52,6 +52,9 @@ def main(is_test_mode: bool) -> None:
                 brick.end.z -= 1
                 brick.points = list(fill_brick(brick))
 
+    # print(' plotting bricks')
+    # plot_bricks(max_x, max_y, max_z, bricks)
+
     print(' building index')
     index: dict[tuple(int, int, int), int] = {}
     for brick in bricks:
@@ -60,6 +63,8 @@ def main(is_test_mode: bool) -> None:
 
     print(' searching for disintegration candidates')
     required: set[int] = set([])
+    depends_on: dict[int, set[int]] = {}
+    holds_up: dict[int, set[int]] = {}
     for brick in bricks:
         supported_by: set[int] = set([])
         for point in brick.points:
@@ -67,6 +72,10 @@ def main(is_test_mode: bool) -> None:
             if key in index:
                 if index[key] != brick.id:
                     supported_by.add(index[key])
+                    if not index[key] in holds_up:
+                        holds_up[index[key]] = set([])
+                    holds_up[index[key]].add(brick.id)
+        depends_on[brick.id] = supported_by
         if len(supported_by) == 1:
             required.add(supported_by.pop())
     candidates: set[int] = set([])
@@ -74,8 +83,11 @@ def main(is_test_mode: bool) -> None:
         if brick.id not in required:
             candidates.add(brick.id)
 
-    # print(' plotting bricks')
-    # plot_bricks(max_x, max_y, max_z, bricks)
+    print(' calculating disintegration impact')
+    print(holds_up)
+    print(depends_on)
+
+
 
     print()
     print(f'disintegration candidates found {len(candidates)}')
