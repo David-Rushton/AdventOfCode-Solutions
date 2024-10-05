@@ -1,4 +1,5 @@
 import sys
+import itertools
 from dataclasses import dataclass
 from typing import Iterator
 
@@ -9,109 +10,89 @@ class Report:
     damaged_groups: list[int]
 
 
+# wrong: 17613380164860
 def main(is_test_mode: bool) -> None:
     print('hot springs')
     print()
 
-    arrangement_count = 0
     reports = get_input(is_test_mode)
-    print('  a   b  extend')
-    print(' --- --- ------')
     for report in reports:
-        a = get_arrangement_count(f'{report.pattern}', report.damaged_groups)
-        if report.pattern.endswith('.'):
-            b = get_arrangement_count(f'?{report.pattern}', report.damaged_groups)
-        else:
-            b = get_arrangement_count(f'{report.pattern}?', report.damaged_groups)
+        print(f' {report.pattern} | {report.damaged_groups}')
 
-        print(f' {str(len(a)).rjust(3)} {str(len(b)).rjust(3)} {str(len(a) * len(b) * len(b) * len(b) * len(b)).rjust(6)}')
-        arrangement_count += len(a) * len(b) * len(b) * len(b) * len(b)
+        unfolded_report = unfold_report(report, factor=5)
+        segments = segment_string(unfolded_report.pattern, size=5)
+
+        all_segments = itertools.product(segments)
+        # all_segments.
+
+
+
+        for segment in all_segments:
+            print(f'  {segment} ') #: {len(get_arrangements_2(segment))}')
 
     print()
-    print(f'arrangement count: {arrangement_count}')
+    # print(f'segments {len(segments)}')
 
 
-def get_arrangement_count(pattern: str, damaged_groups: list[int]) -> list[str]:
-    result: list[str] = []
+def unfold_report(report: Report, factor: int = 5) -> Report:
+    def repeat_pattern() -> Iterator[str]:
+        for _ in range(factor):
+            yield report.pattern
+    return Report(
+        '?'.join(repeat_pattern()),
+        report.damaged_groups * factor)
 
+
+def segment_string(string: str, size: int=5) -> Iterator[str]:
+    buffer = ''
+    for i in range(len(string)):
+        buffer += string[i]
+        if len(buffer) >= size:
+            yield buffer
+            buffer = ''
+    if len(buffer) > 0:
+        yield buffer
+
+
+cache: dict[str, set[str]] = {}
+def get_arrangements_2(pattern: str) -> set[str]:
+    global cache
+
+    if pattern in cache:
+        return cache[pattern]
+
+    cache[pattern] = set()
     q: list[str] = ['']
-    sum_damaged_groups = sum(damaged_groups)
-    total_matches = 0
-    iterations = 0
     while len(q) > 0:
-        iterations += 1
         current = q.pop(0)
 
         if len(current) == len(pattern):
-            if equals_damaged_groups(current, damaged_groups):
-                result.append(current)
-                total_matches += 1
+            cache[pattern].add(current)
             continue
 
         next = pattern[len(current)]
-        if next == '?':
-            options = ['#', '.']
-        else:
-            options = [next]
+        options = ['#', '.'] if next == '?' else next
         for option in options:
-            candidate = f'{current}{option}'
+            q.append(f'{current}{option}')
 
-            damaged = f'{candidate}{pattern[len(candidate):]}'.count('#')
-            if damaged > sum_damaged_groups:
-                continue
-
-            if matches_damaged_groups(candidate, damaged_groups, len(pattern)):
-                q.append(candidate)
-
-    return result
+    return cache[pattern]
 
 
-def matches_damaged_groups(pattern: str, damaged_groups: list[int], limit: int) -> bool:
-    pattern_damaged_groups = ([len(s) for s in pattern.split('.') if len(s) > 0])
-    required = len(pattern) + sum(damaged_groups[len(pattern_damaged_groups):]) + len(damaged_groups[len(pattern_damaged_groups):]) - 1
-    if required > limit:
-        return False
+def get_arrangements(pattern: str, damaged_groups: list[int]) -> Iterator[str]:
+    q: list[str] = ['']
+    while len(q) > 0:
+        current = q.pop(0)
 
-    if len(pattern_damaged_groups) == 0:
-        return True
-    elif len(pattern_damaged_groups) > len(damaged_groups):
-        return False
-    elif len(pattern_damaged_groups) == 1:
-        return pattern_damaged_groups[0] <= damaged_groups[0]
-    else:
-        return pattern_damaged_groups[:-1] == damaged_groups[:len(pattern_damaged_groups) - 1] \
-            and pattern_damaged_groups[-1] <= damaged_groups[len(pattern_damaged_groups) - 1]
+        if len(current) == len(pattern):
+            current_damaged_groups = [len(s) for s in current.split('.') if len(s) > 0]
+            if current_damaged_groups == damaged_groups:
+                yield current
+            continue
 
-
-def equals_damaged_groups(pattern: str, damaged_groups: list[int]) -> bool:
-    current_damaged_groups = ([len(s) for s in pattern.split('.') if len(s) > 0])
-    return current_damaged_groups == damaged_groups
-
-
-def unfold_report(report: Report) -> Report:
-    return Report(
-        '?'.join([report.pattern, report.pattern]), #report.pattern, report.pattern, report.pattern]),
-        report.damaged_groups * 2)
-
-
-def get_damaged_groups(pattern: str) -> Iterator[int]:
-    current_count = 0
-    for char in pattern:
-        if char == '#':
-            current_count += 1
-        if char == '.':
-            if current_count > 0:
-                yield current_count
-                current_count = 0
-        if char == '?':
-            return
-    if current_count > 0:
-        yield current_count
-
-
-def print_reports(reports: list[Report]):
-    for report in reports:
-        print(f'{report.pattern} {report.damaged_groups}')
+        next = pattern[len(current)]
+        options = ['#', '.'] if next == '?' else next
+        for option in options:
+            q.append(f'{current}{option}')
 
 
 def get_input(get_test: bool) -> Iterator[Report]:
