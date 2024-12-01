@@ -52,23 +52,30 @@ func input(path string) []string {
 		log.Fatalf("Cannot read file %v.  Because %v.", path, err)
 	}
 
-	return strings.Split(strings.Replace(string(data), "\r", "", -1), "\n")
+	content := strings.Trim(string(data), " \r\n\t")
+
+	return strings.Split(strings.Replace(content, "\r", "", -1), "\n")
 }
 
 func day() int {
-	// HACK: We read the current day from the executable.
-	// Where we assume the file will be called dayXX.exe.
-	exePath, err := os.Executable()
-	if err != nil {
-		log.Fatalf("Cannot read current day from exe path %v.  Because %v.", exePath, err)
+	dayText := os.Getenv("aoc_day")
+
+	if dayText == "" {
+		// HACK: We read the current day from the executable.
+		// Where we assume the file will be called dayXX.exe.
+		exePath, err := os.Executable()
+		if err != nil {
+			log.Fatalf("Cannot read current day from exe path %v.  Because %v.", exePath, err)
+		}
+
+		exeInfo, err := os.Stat(exePath)
+		if err != nil {
+			log.Fatalf("Cannot read current day from exe path %v.  Because %v.", exePath, err)
+		}
+
+		dayText = strings.Replace(strings.Replace(exeInfo.Name(), "day", "", -1), ".exe", "", -1)
 	}
 
-	exeInfo, err := os.Stat(exePath)
-	if err != nil {
-		log.Fatalf("Cannot read current day from exe path %v.  Because %v.", exePath, err)
-	}
-
-	dayText := strings.Replace(strings.Replace(exeInfo.Name(), "day", "", -1), ".exe", "", -1)
 	day, err := strconv.ParseInt(dayText, 10, 64)
 	if err != nil {
 		log.Fatalf("Cannot read current day from %v.  Because %v.", dayText, err)
