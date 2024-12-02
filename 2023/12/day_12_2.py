@@ -9,65 +9,163 @@ class Report:
     damaged_groups: list[int]
 
 
+@dataclass
+class Tracker:
+    pattern: str
+    damaged_groups: list[int]
+    weight: int
+
+
 def main(is_test_mode: bool) -> None:
     print('hot springs')
     print()
 
-    arrangement_count = 0
+    is_test_mode = True
+
+    total_arrangement_count = 0
     reports = get_input(is_test_mode)
     for report in reports:
-        unfolded_report = unfold_report(report)
-        print(f' {report.pattern}', end='')
+        unfolded_report = unfold_report(report, size=5)
+        print(f' {report.pattern} | ', end='')
 
-        for arrangement in get_arrangements(unfolded_report.pattern, unfolded_report.damaged_groups, level=0, result=[]):
-            if list(get_damaged_groups(arrangement)) == unfolded_report.damaged_groups:
-                arrangement_count += 1
-
-        print(f' {arrangement_count}')
+        segments = list(split_str(unfolded_report.pattern, size=10))
+        arrangement_count = sum(get_arrangement_count(segments, unfolded_report))
+        total_arrangement_count += arrangement_count
+        print(arrangement_count)
 
     print()
-    print(f'arrangement count: {arrangement_count}')
+    print(f'arrangement count: {total_arrangement_count}')
 
 
-def get_arrangements(pattern: str, damaged_groups: list[int], level: int=0, result: list[str]=[]) -> list[str]:
-    current_damaged_groups = list(get_damaged_groups(pattern))
-    if len(current_damaged_groups) > 0:
-        if current_damaged_groups != damaged_groups[0:len(current_damaged_groups)]:
-            return result
+def unfold_report(report: Report, size:int = 5) -> Report:
+    unfolded_pattern = []
+    for _ in range(size):
+        unfolded_pattern.append(report.pattern)
+    return Report(
+        '?'.join(unfolded_pattern),
+        report.damaged_groups * size)
 
-    if pattern.find('?', level) == -1:
-        result.append(pattern)
+
+def get_arrangement_count(
+        segments: list[str],
+        report: Report,
+        prefix: str='',
+        current_damaged_groups: list[int] = [],
+        level: int=0,
+        matches: list[int]=[],
+        weight: int=1) -> list[int]:
+    if level < len(segments):
+        segment = segments[level]
+        cache: dict[str, Tracker] = {}
+        for arrangement in get_arrangements(segment):
+
+            candidate = f'{prefix}{arrangement}'
+            arrangement_damaged_groups = get_damaged_groups(arrangement)
+            candidate_damaged_groups = add_damaged_groups(prefix, current_damaged_groups, arrangement, arrangement_damaged_groups)
+
+            if len(candidate) == len(report.pattern):
+                if is_exact_match(candidate_damaged_groups, report.damaged_groups):
+                    matches.append(weight)
+            else:
+                if is_match(candidate[-1] == '.', candidate_damaged_groups, report.damaged_groups):
+                    key = f'{candidate[-1]}-{str(candidate_damaged_groups)}'
+                    if key not in cache:
+                        cache[key] = Tracker(f'{candidate[0]}{"." * (len(candidate) - 2)}{candidate[-1]}', candidate_damaged_groups, weight)
+                    else:
+                        cache[key].weight += 1
+                    # print(f' {key} {cache[key].damaged_groups} {cache[key].weight}')
+
+        for key in cache:
+            item = cache[key]
+            cumulative_weight = weight * item.weight
+            matches = get_arrangement_count(segments, report, item.pattern, item.damaged_groups, level + 1, matches, item.weight)
+
+    return matches
+
+
+def add_damaged_groups(
+        left_pattern: str,
+        left_damaged_groups: list[int],
+        right_pattern: str,
+        right_damaged_groups: list[int]) -> list[int]:
+    if len(left_pattern) == 0:
+        return right_damaged_groups
+    # .#. + .#. [1] + [1] == [1, 1]
+    # ..# + #.. [1] + [1] ==    [1]
+    # ..# + .#. [1] + [1] == [1, 1]
+    # .#. + #.. [1] + [1] == [1, 1]
+    if left_pattern.endswith('#') and right_pattern.startswith('#'):
+        new_damaged_groups = left_damaged_groups[:-1]
+        new_damaged_groups.append(left_damaged_groups[-1] + right_damaged_groups[0])
+        new_damaged_groups.extend(right_damaged_groups[1:])
+        return new_damaged_groups
     else:
-        get_arrangements(pattern.replace('?', '#', 1), damaged_groups, level + 1, result)
-        get_arrangements(pattern.replace('?', '.', 1), damaged_groups, level + 1, result)
+        return  left_damaged_groups + right_damaged_groups
 
+
+def is_match(closed: bool, compare: list[int], against: list[int]) -> bool:
+    if len(compare) == 0:
+        return True
+    elif len(compare) > len(against):
+        return False
+    elif len(compare) == 1 and len(against) > 1:
+        return compare[0] <= against[0]
+    else:
+        start_matches = compare[:-1] == against[:len(compare) - 1]
+        if closed:
+            last_matches = compare[-1] == against[len(compare) - 1]
+        else:
+            last_matches = compare[-1] <= against[len(compare) - 1]
+        return start_matches and last_matches
+
+
+def is_exact_match(compare: list[int], against: list[int]) -> bool:
+    return compare == against
+
+
+def split_str(string: str, size: int = 10) -> Iterator[str]:
+    start = 0
+    end = 0
+    while end < len(string):
+        start = end
+        end = end + size
+        end if end <= len(string) else len(string)
+        yield string[start:end]
+
+
+damaged_groups_cache: dict[str, list[int]] = {}
+def get_damaged_groups(pattern: str) -> list[int]:
+    global damaged_groups_cache
+    if pattern in damaged_groups_cache:
+        return damaged_groups_cache[pattern]
+
+    result = [len(section) for section in pattern.split('.') if len(section) > 0]
+    damaged_groups_cache[pattern] = result
     return result
 
 
-def unfold_report(report: Report) -> Report:
-    return Report(
-        '?'.join([report.pattern, report.pattern, report.pattern, report.pattern, report.pattern]),
-        report.damaged_groups * 5)
+arrangement_cache: dict[str, list[str]] = {}
+def get_arrangements(pattern: str) -> list[str]:
+    global arrangement_cache
+    if pattern in arrangement_cache:
+        return arrangement_cache[pattern]
 
+    result: list[str] = []
+    q: list[str] = ['']
+    while len(q) > 0:
+        current = q.pop(0)
 
-def get_damaged_groups(pattern: str) -> Iterator[int]:
-    current_count = 0
-    for char in pattern:
-        if char == '#':
-            current_count += 1
-        if char == '.':
-            if current_count > 0:
-                yield current_count
-                current_count = 0
-        if char == '?':
-            return
-    if current_count > 0:
-        yield current_count
+        if len(current) == len(pattern):
+            result.append(current)
+            continue
 
+        next = pattern[len(current)]
+        candidates = [next] if next != '?' else ['#', '.']
+        for candidate in candidates:
+            q.append(f'{current}{candidate}')
 
-def print_reports(reports: list[Report]):
-    for report in reports:
-        print(f'{report.pattern} {report.damaged_groups}')
+    arrangement_cache[pattern] = result
+    return result
 
 
 def get_input(get_test: bool) -> Iterator[Report]:
