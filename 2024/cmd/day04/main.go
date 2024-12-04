@@ -21,18 +21,20 @@ func main() {
 	}
 
 	// scan grid
-	total := 0
+	xmasTotal := 0
+	masTotal := 0
 	for y := 0; y < len(grid); y++ {
 		for x := 0; x < len(grid[y]); x++ {
-			subTotal := countHits(grid, x, y)
-			total += subTotal
+			xmasTotal += findXMas(grid, x, y)
+			masTotal += findMas(grid, x, y)
 		}
 	}
 
-	fmt.Printf("Hits: %d\n", total)
+	fmt.Printf("XMAS Hits: %d\n", xmasTotal)
+	fmt.Printf("MAS Hits: %d\n", masTotal)
 }
 
-func countHits(grid [][]rune, x, y int) int {
+func findXMas(grid [][]rune, x, y int) int {
 	offsets := []struct {
 		x int
 		y int
@@ -71,6 +73,44 @@ func countHits(grid [][]rune, x, y int) int {
 				}
 			}
 		}
+	}
+
+	return found
+}
+
+func findMas(grid [][]rune, x, y int) int {
+	if grid[y][x] != 'A' {
+		return 0
+	}
+
+	if y < 1 || y > len(grid)-2 {
+		return 0
+	}
+
+	if x < 1 || x > len(grid[y])-2 {
+		return 0
+	}
+
+	isMS := func(left, right rune) bool {
+		if left == 'M' && right == 'S' {
+			return true
+		}
+
+		if left == 'S' && right == 'M' {
+			return true
+		}
+
+		return false
+	}
+
+	found := 0
+	topLeft := grid[y-1][x-1]
+	topRight := grid[y-1][x+1]
+	bottomLeft := grid[y+1][x-1]
+	bottomRight := grid[y+1][x+1]
+
+	if isMS(topLeft, bottomRight) && isMS(topRight, bottomLeft) {
+		found++
 	}
 
 	return found
