@@ -32,14 +32,17 @@ func getState() AocState {
 		inputPath = path.Join(inputPath, "input.txt")
 	}
 
-	// Everyting we need to get started.
+	input := input(inputPath)
+
+	// Everything we need to get started.
 	return AocState{
 		Day:         day,
 		Star:        star,
 		VerboseMode: slices.Contains(os.Args, "--verbose") || slices.Contains(os.Args, "-v"),
 		TestMode:    testMode,
 		InputPath:   inputPath,
-		Input:       input(inputPath),
+		Input:       input,
+		InputRaw:    strings.Join(input, "\n"),
 	}
 }
 

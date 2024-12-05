@@ -16,6 +16,7 @@ type AocState struct {
 	TestMode    bool
 	InputPath   string
 	Input       []string
+	InputRaw    string
 }
 
 func (ae AocState) String() string {

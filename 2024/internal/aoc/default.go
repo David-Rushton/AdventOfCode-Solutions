@@ -20,6 +20,7 @@ var (
 	TestMode    bool
 	InputPath   string
 	Input       []string
+	InputRaw    string
 )
 
 func init() {
@@ -34,6 +35,7 @@ func init() {
 	TestMode = state.TestMode
 	InputPath = state.InputPath
 	Input = state.Input
+	InputRaw = state.InputRaw
 
 	if VerboseMode {
 		iostr.Verboseln(state)
