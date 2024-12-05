@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2024/internal/aoc"
+	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2024/internal/iostr"
 )
 
 func main() {
@@ -19,7 +20,7 @@ func main() {
 
 	rulesMap, pageUpdates := parse(aoc.InputRaw)
 	for _, pageUpdate := range pageUpdates {
-		fmt.Printf("pageUpdate: %v.\n", pageUpdate)
+		iostr.Verbosef("pageUpdate: %v.\n", pageUpdate)
 
 		if subTotal, failedAt := processUpdate(pageUpdate, rulesMap); failedAt == 0 {
 			starOneTotal += subTotal
@@ -62,7 +63,7 @@ func processUpdate(pageUpdate []int, rulesMap map[int]big.Int) (value, failedAt 
 		}
 
 		if localRules.Bit(num) == 1 {
-			fmt.Printf("\tupdate failed: %v.  Rule violation: %v.\n", pageUpdate, num)
+			iostr.Verbosef("\tupdate failed: %v.  Rule violation: %v.\n", pageUpdate, num)
 			return 0, i
 		}
 	}
