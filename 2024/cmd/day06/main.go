@@ -33,10 +33,8 @@ var (
 )
 
 func main() {
-	visited := make(map[point]int)
 	grid := make(map[point]cell)
 	guard := guard{}
-	gameOver := false
 
 	// Build grid.
 	for y, line := range aoc.Input {
@@ -49,7 +47,6 @@ func main() {
 			}
 
 			if grid[point].visited {
-				visited[point]++
 				guard.point = point
 				guard.direction = r
 			}
@@ -57,6 +54,53 @@ func main() {
 	}
 
 	// Simulate.
+	_, visits := Simulate(guard, grid)
+	loopsFound := findLoop(visits, guard, grid)
+
+	fmt.Println()
+	fmt.Printf("Loops found: %d\n", loopsFound)
+}
+
+type exitReason int
+
+const (
+	leftGrid exitReason = iota
+	loop
+)
+
+func findLoop(visited map[point]int, guard guard, grid map[point]cell) int {
+	var result int
+
+	var skippedFirst bool
+	for candidateObstacle := range visited {
+		if !skippedFirst {
+			// We can't obstruct the starting cell.
+			skippedFirst = true
+			continue
+		}
+
+		// copy grid
+		candidateGrid := make(map[point]cell)
+		for _, c := range grid {
+			candidateGrid[c.point] = c
+
+			if c.point == candidateObstacle {
+				candidateGrid[c.point] = cell{candidateObstacle, false, true}
+			}
+		}
+
+		if reason, _ := Simulate(guard, candidateGrid); reason == loop {
+			result++
+		}
+	}
+
+	return result
+}
+
+func Simulate(guard guard, grid map[point]cell) (reason exitReason, visits map[point]int) {
+	visited := make(map[point]int)
+	visited[guard.point]++
+
 	fmt.Println("\x1b[2J")
 	fmt.Print("\x1b[?25l")
 	for {
@@ -72,13 +116,13 @@ func main() {
 			}
 
 			if candidatePoint.x < 0 || candidatePoint.x >= len(aoc.Input[0]) {
-				gameOver = true
-				break
+				fmt.Print("\x1b[?25h")
+				return leftGrid, visited
 			}
 
 			if candidatePoint.y < 0 || candidatePoint.y >= len(aoc.Input) {
-				gameOver = true
-				break
+				fmt.Print("\x1b[?25h")
+				return leftGrid, visited
 			}
 
 			if grid[candidatePoint].hasObstacle {
@@ -100,7 +144,12 @@ func main() {
 			cell.visited = true
 			grid[candidatePoint] = cell
 			guard.point = candidatePoint
+
 			visited[guard.point]++
+			if visited[guard.point] > 4 {
+				return loop, visited
+			}
+
 			break
 		}
 
@@ -127,13 +176,7 @@ func main() {
 				fmt.Println()
 			}
 
-			time.Sleep(time.Millisecond * 300)
-		}
-
-		if gameOver {
-			break
+			time.Sleep(time.Millisecond * 100)
 		}
 	}
-
-	fmt.Print("\x1b[?25h")
 }
