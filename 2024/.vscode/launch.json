@@ -45,6 +45,20 @@
             "env": {
                 "aoc_day": "4"
             }
+        },
+        {
+            "name": "D7 S1 T",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day07",
+            "args": [
+                "-t"
+            ],
+            "env": {
+                "aoc_day": "7"
+            }
         }
     ]
 }
