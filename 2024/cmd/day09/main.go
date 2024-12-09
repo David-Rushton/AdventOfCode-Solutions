@@ -4,23 +4,14 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2024/internal/aoc"
-	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2024/internal/iostr"
 )
 
 type diskFile struct {
 	id         int
 	usedBlocks int
 	freeBlocks int
-}
-
-func (df *diskFile) toBlocks() string {
-	return fmt.Sprintf(
-		"%s%s",
-		strings.Repeat(strconv.FormatInt(int64(df.id), 10), df.usedBlocks),
-		strings.Repeat(".", df.freeBlocks))
 }
 
 func main() {
@@ -32,10 +23,6 @@ func main() {
 	compacted := compact(blocks, aoc.Star == aoc.StarTwo)
 	checksum := getChecksum(compacted)
 
-	iostr.Verbosef("  Blocks:\t%v", blocks)
-	iostr.Verbosef("  Compacted:\t%v", compacted)
-	iostr.Verbosef("  Checksum:\t%d", checksum)
-
 	fmt.Println()
 	fmt.Printf("Result: %d\n", checksum)
 }
@@ -44,6 +31,9 @@ func getChecksum(blocks []*diskFile) int64 {
 	var result int64
 
 	for i, block := range blocks {
+		if block == nil {
+			continue
+		}
 		result += int64(i) * int64(block.id)
 	}
 
@@ -59,7 +49,48 @@ func compact(blocks []*diskFile, moveWholeFiles bool) []*diskFile {
 }
 
 func compactFiles(blocks []*diskFile) []*diskFile {
-	panic("not implemented")
+	result := append([]*diskFile{}, blocks...)
+
+	type freeMemory struct {
+		at  int
+		len int
+	}
+
+	freeMemoryMap := []*freeMemory{}
+	for i := 0; i < len(blocks); i++ {
+		if blocks[i] == nil {
+			j := i + 1
+			for ; j < len(blocks) && blocks[j] == nil; j++ {
+			}
+
+			freeMemoryMap = append(freeMemoryMap, &freeMemory{at: i, len: j - i})
+			i = j
+		}
+	}
+
+	for i := len(blocks) - 1; i >= 0; i-- {
+		for ; blocks[i] == nil; i-- {
+		}
+
+		requiredSpace := blocks[i].usedBlocks
+		for x := 0; x < len(freeMemoryMap); x++ {
+			if freeMemoryMap[x].len >= requiredSpace && i > freeMemoryMap[x].at {
+				for y := 0; y < requiredSpace; y++ {
+					result[freeMemoryMap[x].at+y] = result[i]
+					result[i] = nil
+					i--
+				}
+				i++
+
+				freeMemoryMap[x].at += requiredSpace
+				freeMemoryMap[x].len -= requiredSpace
+
+				break
+			}
+		}
+	}
+
+	return result
 }
 
 func compactBlocks(blocks []*diskFile) []*diskFile {
