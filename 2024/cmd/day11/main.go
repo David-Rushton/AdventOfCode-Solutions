@@ -14,46 +14,67 @@ func main() {
 	fmt.Println("--- Day 11: Plutonian Pebbles ---")
 	fmt.Println()
 
-	stones := parse(aoc.Input[0])
-	fmt.Printf("Initial arrangement:\n%v\n\n", stones)
+	stoneQueue := make(map[int]int)
+	for _, stone := range parse(aoc.Input[0]) {
+		stoneQueue[stone]++
+	}
 
-	for i := 1; i < 76; i++ {
-		stones = blink(stones)
-		fmt.Printf("After %d blinks: %v\n", i, len(stones))
+	generations := 25
+	if aoc.Star == aoc.StarTwo {
+		generations = 75
+	}
+
+	blinkCache := make(map[int][]int)
+
+	for generation := 0; generation < generations; generation++ {
+		fmt.Printf("  Generation: %d\n", generation+1)
+
+		nextStoneQueue := make(map[int]int)
+		visitCache := make(map[int]int)
+
+		for stone, visits := range stoneQueue {
+			if _, found := visitCache[stone]; !found {
+				blinkCache[stone] = blink(stone)
+			}
+			visitCache[stone] += visits
+
+			for _, nextStone := range blinkCache[stone] {
+				nextStoneQueue[nextStone] += visitCache[stone]
+			}
+		}
+
+		stoneQueue = nextStoneQueue
+	}
+
+	var total int
+	for _, visits := range stoneQueue {
+		total += visits
 	}
 
 	fmt.Println()
-	fmt.Printf("Result: %d", len(stones))
+	fmt.Printf("Result: %d", total)
 }
 
 // don't.  don't even...
-func blink(stones []int64) []int64 {
-	var result []int64
-
-	for _, stone := range stones {
-		if stone == 0 {
-			result = append(result, 1)
-			continue
-		}
-
-		stoneLen := len(strconv.FormatInt(stone, 10))
-		if stoneLen%2 == 0 {
-			splitAt := int64(math.Pow10(stoneLen / 2.0))
-			result = append(
-				result,
-				stone/splitAt,
-				stone%splitAt)
-			continue
-		}
-
-		result = append(result, stone*2024)
+func blink(stone int) []int {
+	if stone == 0 {
+		return []int{1}
 	}
 
-	return result
+	stoneLen := len(strconv.FormatInt(int64(stone), 10))
+	if stoneLen%2 == 0 {
+		splitAt := int(math.Pow10(stoneLen / 2.0))
+		return []int{
+			stone / splitAt,
+			stone % splitAt,
+		}
+	}
+
+	return []int{stone * 2024}
 }
 
-func parse(input string) []int64 {
-	var result []int64
+func parse(input string) []int {
+	var result []int
 
 	for _, valueTxt := range strings.Split(input, " ") {
 		valueNum, err := strconv.ParseInt(string(valueTxt), 10, 64)
@@ -61,7 +82,7 @@ func parse(input string) []int64 {
 			log.Fatalf("Cannot convert %s to a number.", valueTxt)
 		}
 
-		result = append(result, valueNum)
+		result = append(result, int(valueNum))
 
 	}
 
