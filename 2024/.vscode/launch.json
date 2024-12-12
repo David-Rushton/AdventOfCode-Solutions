@@ -88,6 +88,20 @@
             "env": {
                 "aoc_day": "11"
             }
+        },
+        {
+            "name": "D12 S1 T",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day12",
+            "args": [
+                "-t",
+            ],
+            "env": {
+                "aoc_day": "12"
+            }
         }
     ]
 }
