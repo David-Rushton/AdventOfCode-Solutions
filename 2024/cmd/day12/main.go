@@ -27,16 +27,15 @@ func main() {
 	var totalPriceBySides int
 	for _, region := range regions {
 		area, perimeter, sides := scanRegion(grid, region)
-		price := area * perimeter
 		totalPriceByArea += area * perimeter
 		totalPriceBySides += area * sides
 
 		fmt.Printf(
-			" A region of %s plants with price %d x %d = %d.\n",
+			" A region of %s plants with price % 3d x % 3d = % 5d.\n",
 			grid[region[0].y][region[0].x],
 			area,
-			perimeter,
-			price)
+			sides,
+			area*sides)
 	}
 
 	fmt.Println()
@@ -47,26 +46,73 @@ func main() {
 func scanRegion(grid grid, region []point) (area, perimeter, sides int) {
 	area = 0
 	perimeter = 0
+	sides = 0
 
-	crop := grid[region[0].y][region[0].x]
+	sameCrop := func(from point, xOffset, yOffset int) bool {
+		offsetPoint := point{from.x + xOffset, from.y + yOffset}
+		if inGrid(grid, offsetPoint) {
+			return grid[from.y][from.x] == grid[offsetPoint.y][offsetPoint.x]
+		}
+
+		return false
+	}
+
 	perimeters := []point{}
 
 	for _, point := range region {
 		area++
-		offsets := getOffset(grid, point)
-		perimeter += 4 - len(offsets)
-		for _, offset := range offsets {
-			if grid[offset.y][offset.x] != crop {
+		for _, offset := range getOffsets(point) {
+			if !inGrid(grid, offset) || grid[point.y][point.x] != grid[offset.y][offset.x] {
 				perimeter++
 
-				if !slices.Contains(perimeters, offset) {
+				if !slices.Contains(perimeters, point) {
 					perimeters = append(perimeters, point)
 				}
 			}
 		}
+
+		// ext corner: top left.
+		if !sameCrop(point, 0, -1) && !sameCrop(point, -1, 0) {
+			sides++
+		}
+
+		// ext corner: top right.
+		if !sameCrop(point, 0, -1) && !sameCrop(point, 1, 0) {
+			sides++
+		}
+
+		// ext corner: bottom left.
+		if !sameCrop(point, 0, 1) && !sameCrop(point, -1, 0) {
+			sides++
+		}
+
+		// ext corner: bottom right.
+		if !sameCrop(point, 0, 1) && !sameCrop(point, 1, 0) {
+			sides++
+		}
+
+		// int corner: top left.
+		if !sameCrop(point, -1, -1) && sameCrop(point, -1, 0) && sameCrop(point, 0, -1) {
+			sides++
+		}
+
+		// int corner: top right.
+		if !sameCrop(point, 1, -1) && sameCrop(point, 1, 0) && sameCrop(point, 0, -1) {
+			sides++
+		}
+
+		// int corner: bottom left.
+		if !sameCrop(point, -1, 1) && sameCrop(point, -1, 0) && sameCrop(point, 0, 1) {
+			sides++
+		}
+
+		// int corner: bottom right.
+		if !sameCrop(point, 1, 1) && sameCrop(point, 1, 0) && sameCrop(point, 0, 1) {
+			sides++
+		}
 	}
 
-	return area, perimeter, len(perimeters)
+	return area, perimeter, sides
 }
 
 func toRegions(grid grid) regions {
@@ -89,8 +135,8 @@ func toRegions(grid grid) regions {
 						visited = append(visited, current)
 					}
 
-					for _, offset := range getOffset(grid, current) {
-						if !slices.Contains(visited, offset) && !slices.Contains(queue, offset) {
+					for _, offset := range getOffsets(current) {
+						if inGrid(grid, offset) && !slices.Contains(visited, offset) && !slices.Contains(queue, offset) {
 							if grid[offset.y][offset.x] == crop {
 								queue = append(queue, offset)
 							}
@@ -108,7 +154,7 @@ func toRegions(grid grid) regions {
 	return regions
 }
 
-func getOffset(grid grid, from point) []point {
+func getOffsets(from point) []point {
 	offsets := []struct {
 		x int
 		y int
@@ -121,13 +167,14 @@ func getOffset(grid grid, from point) []point {
 
 	result := []point{}
 	for _, offset := range offsets {
-		candidate := point{from.x + offset.x, from.y + offset.y}
-		if candidate.y >= 0 && candidate.y < len(grid) && candidate.x >= 0 && candidate.x < len(grid[candidate.y]) {
-			result = append(result, candidate)
-		}
+		result = append(result, point{from.x + offset.x, from.y + offset.y})
 	}
 
 	return result
+}
+
+func inGrid(grid grid, point point) bool {
+	return point.y >= 0 && point.y < len(grid) && point.x >= 0 && point.x < len(grid[point.y])
 }
 
 func parse(input []string) grid {
