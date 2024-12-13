@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"math"
 	"strconv"
 	"strings"
 
@@ -22,15 +21,15 @@ type clawMachine struct {
 }
 
 func main() {
-	fmt.Println("---  Day 13: ??? ---")
+	fmt.Println("---  Day 13: Claw Contraption ---")
 	fmt.Println()
 
-	prizeMultiplier := 1
+	prizeBuilder := 0
 	if aoc.Star == aoc.StarTwo {
-		prizeMultiplier = 10000000000000
+		prizeBuilder = 10000000000000
 	}
 
-	clawMachines := parse(aoc.Input, prizeMultiplier)
+	clawMachines := parse(aoc.Input, prizeBuilder)
 	total := 0
 
 	for _, machine := range clawMachines {
@@ -43,78 +42,30 @@ func main() {
 	fmt.Printf("Result: %d\n", total)
 }
 
-type machineState struct {
-	x      int
-	y      int
-	round  int
-	tokens int
-}
-
-type stake struct {
-	x      int
-	y      int
-	tokens int
-}
-
 func play(machine clawMachine) (tokens int) {
-	queue := []machineState{{}}
-	stakes := []stake{
-		{
-			x:      machine.buttonA.x,
-			y:      machine.buttonA.y,
-			tokens: 3,
-		},
-		{
-			x:      machine.buttonB.x,
-			y:      machine.buttonB.y,
-			tokens: 1,
-		},
+	px := machine.prize.x
+	py := machine.prize.y
+
+	ax := machine.buttonA.x
+	ay := machine.buttonA.y
+
+	bx := machine.buttonB.x
+	by := machine.buttonB.y
+
+	a := (px*by - py*bx) / (ax*by - ay*bx)
+	b := (py - a*ay) / by
+
+	tx := a*ax + b*bx
+	ty := a*ay + b*by
+
+	if tx == px && ty == py {
+		return a*3 + b
 	}
 
-	cheapestWin := math.MaxInt
-	visited := make(map[machineState]int)
-
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-
-		for _, stake := range stakes {
-			candidate := machineState{
-				current.x + stake.x,
-				current.y + stake.y,
-				current.round + 1,
-				current.tokens + stake.tokens,
-			}
-
-			if _, found := visited[candidate]; found {
-				continue
-			}
-			visited[candidate]++
-
-			if stake.tokens > cheapestWin {
-				continue
-			}
-
-			if candidate.x < machine.prize.x && candidate.y < machine.prize.y {
-				queue = append(queue, candidate)
-			}
-
-			if candidate.x == machine.prize.x && candidate.y == machine.prize.y {
-				if candidate.tokens < cheapestWin {
-					cheapestWin = candidate.tokens
-				}
-			}
-		}
-	}
-
-	if cheapestWin == math.MaxInt {
-		cheapestWin = 0
-	}
-
-	return cheapestWin
+	return 0
 }
 
-func parse(input []string, prizeMultiplier int) []clawMachine {
+func parse(input []string, prizeBuilder int) []clawMachine {
 	result := []clawMachine{}
 
 	getPoint := func(value string) point {
@@ -156,8 +107,8 @@ func parse(input []string, prizeMultiplier int) []clawMachine {
 
 		if strings.HasPrefix(line, "Prize") {
 			result[current].prize = getPoint(line)
-			result[current].prize.x *= prizeMultiplier
-			result[current].prize.y *= prizeMultiplier
+			result[current].prize.x += prizeBuilder
+			result[current].prize.y += prizeBuilder
 			continue
 		}
 	}
