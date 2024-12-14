@@ -34,14 +34,15 @@ func main() {
 	safetyFactor := 0
 	robots := parse(aoc.Input)
 
-	for i := 0; i < 100; i++ {
+	var seconds int
+	for ; shouldContinue(seconds, grid, robots); seconds++ {
 		robots, safetyFactor = moveRobots(grid, robots)
 	}
 
 	printGrid(grid, robots)
 
 	fmt.Println()
-	fmt.Printf("Result: %d\n", safetyFactor)
+	fmt.Printf("Result: %d at %d\n", safetyFactor, seconds)
 }
 
 func moveRobots(grid dimensions, robots []robot) ([]robot, int) {
@@ -69,11 +70,9 @@ func moveRobots(grid dimensions, robots []robot) ([]robot, int) {
 		robot.point.x = moveWithTeleport(robot.point.x, robot.velocity.x, grid.x)
 		robot.point.y = moveWithTeleport(robot.point.y, robot.velocity.y, grid.y)
 		movedRobots = append(movedRobots, robot)
-
 		if robot.point.x == grid.x/2 || robot.point.y == grid.y/2 {
 			continue
 		}
-
 		if robot.point.x < grid.x/2 {
 			if robot.point.y < grid.y/2 {
 				quadrants[0]++
@@ -90,6 +89,39 @@ func moveRobots(grid dimensions, robots []robot) ([]robot, int) {
 	}
 
 	return movedRobots, quadrants[0] * quadrants[1] * quadrants[2] * quadrants[3]
+}
+
+func shouldContinue(seconds int, grid dimensions, robots []robot) bool {
+	if aoc.Star == aoc.StarOne {
+		return seconds < 100
+	} else {
+		return maybeChristmasTree(grid, robots)
+	}
+}
+
+func maybeChristmasTree(grid dimensions, robots []robot) bool {
+	// find robots
+	locations := make(map[point]int)
+	for _, robot := range robots {
+		locations[robot.point]++
+	}
+
+	// check for opposite robots
+	var matches int
+	for location, _ := range locations {
+		if location.x < grid.x/2 {
+			oppositeLocation := point{
+				x: grid.x - location.x,
+				y: location.y,
+			}
+
+			if _, exists := locations[oppositeLocation]; exists {
+				matches++
+			}
+		}
+	}
+
+	return matches < 70
 }
 
 func parse(input []string) []robot {
