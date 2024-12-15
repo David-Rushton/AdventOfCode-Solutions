@@ -116,6 +116,35 @@
             "env": {
                 "aoc_day": "13"
             }
+        },
+        {
+            "name": "D15 S1 T",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day15",
+            "args": [
+                "-t",
+            ],
+            "env": {
+                "aoc_day": "15"
+            }
+        },
+        {
+            "name": "D15 S2 T",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day15",
+            "args": [
+                "-t",
+                "-2"
+            ],
+            "env": {
+                "aoc_day": "15"
+            }
         }
     ]
 }
