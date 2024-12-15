@@ -23,7 +23,7 @@ type robot struct {
 }
 
 func main() {
-	fmt.Println("---  Day 14: ?? ---")
+	fmt.Println("---  Day 14: Restroom Redoubt ---")
 	fmt.Println()
 
 	grid := dimensions{101, 103}
