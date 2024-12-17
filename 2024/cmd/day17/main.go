@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -20,16 +22,57 @@ func main() {
 	fmt.Println("Day 17: Chronospatial Computer")
 	fmt.Println()
 
+	stdOut := []int{}
 	registers, program := parse(aoc.Input)
-	registers = runProgram(registers, program)
 
-	fmt.Println()
+	if aoc.Star == aoc.StarOne {
+		registers, stdOut = runProgram(registers, program)
+
+		fmt.Printf("  Standard Out: %s\n", toString(stdOut))
+		fmt.Println()
+	}
+
+	if aoc.Star == aoc.StarTwo {
+		type state struct {
+			result int
+			level  int
+		}
+
+		queue := []state{{0, 0}}
+		for len(queue) > 0 {
+			current := queue[0]
+			queue = queue[1:]
+
+			for j := 0; j < 8; j++ {
+				candidate := current.result + j
+				registers[registerA] = candidate
+				registers[registerB] = 0
+				registers[registerC] = 0
+				registers, stdOut = runProgram(registers, program)
+
+				if slices.Equal(stdOut, program) {
+					fmt.Printf("\nResult: %d\n", candidate)
+					os.Exit(0)
+				}
+
+				if stdOut[0] == program[len(program)-current.level-1] {
+					if len(stdOut) < len(program) {
+						queue = append(queue, state{candidate * 8, current.level + 1})
+					}
+					fmt.Printf("  -----------~> % 2d %d\n", current.level, candidate)
+				}
+			}
+		}
+	}
+
 	fmt.Printf("Register A: %d\n", registers[registerA])
 	fmt.Printf("Register B: %d\n", registers[registerB])
 	fmt.Printf("Register C: %d\n", registers[registerC])
 }
 
-func runProgram(registers, program []int) []int {
+func runProgram(registersIn, program []int) (registers, stdOut []int) {
+	registers = registersIn
+	stdOut = []int{}
 
 	getComboOperand := func(value int) int {
 		if value >= 0 && value <= 3 {
@@ -42,9 +85,6 @@ func runProgram(registers, program []int) []int {
 
 		panic(fmt.Sprintf("Combo operand %d not supported.", value))
 	}
-
-	var stdOutCount int
-	fmt.Print("  Standard out: ")
 
 	var i int
 	for {
@@ -75,11 +115,7 @@ func runProgram(registers, program []int) []int {
 			registers[registerB] = registers[registerB] ^ registers[registerC]
 		// out
 		case 5:
-			if stdOutCount > 0 {
-				fmt.Print(",")
-			}
-			fmt.Printf("%v", getComboOperand(operand)%8)
-			stdOutCount++
+			stdOut = append(stdOut, getComboOperand(operand)%8)
 		// bdv
 		case 6:
 			numerator := registers[registerA]
@@ -102,9 +138,7 @@ func runProgram(registers, program []int) []int {
 		}
 	}
 
-	fmt.Println()
-
-	return registers
+	return registers, stdOut
 }
 
 func parse(input []string) (registers, program []int) {
@@ -138,4 +172,12 @@ func toInt(s string) int {
 		log.Fatalf("Cannot convert %s to a number", s)
 	}
 	return int(result)
+}
+
+func toString(numbers []int) string {
+	values := []string{}
+	for _, number := range numbers {
+		values = append(values, strconv.FormatInt(int64(number), 10))
+	}
+	return strings.Join(values, ",")
 }
