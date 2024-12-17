@@ -157,6 +157,20 @@
             "env": {
                 "aoc_day": "16"
             }
+        },
+        {
+            "name": "D17 S1",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day17",
+            "args": [
+                "-t"
+            ],
+            "env": {
+                "aoc_day": "17"
+            }
         }
     ]
 }

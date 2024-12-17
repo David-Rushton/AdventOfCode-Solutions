@@ -1,0 +1,141 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"math"
+	"strconv"
+	"strings"
+
+	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2024/internal/aoc"
+)
+
+const (
+	registerA = 0
+	registerB = 1
+	registerC = 2
+)
+
+func main() {
+	fmt.Println("Day 17: Chronospatial Computer")
+	fmt.Println()
+
+	registers, program := parse(aoc.Input)
+	registers = runProgram(registers, program)
+
+	fmt.Println()
+	fmt.Printf("Register A: %d\n", registers[registerA])
+	fmt.Printf("Register B: %d\n", registers[registerB])
+	fmt.Printf("Register C: %d\n", registers[registerC])
+}
+
+func runProgram(registers, program []int) []int {
+
+	getComboOperand := func(value int) int {
+		if value >= 0 && value <= 3 {
+			return value
+		}
+
+		if value >= 4 && value <= 6 {
+			return registers[value-4]
+		}
+
+		panic(fmt.Sprintf("Combo operand %d not supported.", value))
+	}
+
+	var stdOutCount int
+	fmt.Print("  Standard out: ")
+
+	var i int
+	for {
+		opCode := program[i]
+		operand := program[i+1]
+
+		switch opCode {
+		// adv
+		case 0:
+			numerator := registers[registerA]
+			denominator := math.Pow(2, float64(getComboOperand(operand)))
+			result := numerator / int(denominator)
+			registers[registerA] = result
+		// bxl
+		case 1:
+			registers[registerB] = registers[registerB] ^ operand
+		// bst
+		case 2:
+			registers[registerB] = getComboOperand(operand) % 8
+		// jnz
+		case 3:
+			if registers[registerA] != 0 {
+				i = operand
+				continue
+			}
+		// bxc
+		case 4:
+			registers[registerB] = registers[registerB] ^ registers[registerC]
+		// out
+		case 5:
+			if stdOutCount > 0 {
+				fmt.Print(",")
+			}
+			fmt.Printf("%v", getComboOperand(operand)%8)
+			stdOutCount++
+		// bdv
+		case 6:
+			numerator := registers[registerA]
+			denominator := math.Pow(2, float64(getComboOperand(operand)))
+			result := numerator / int(denominator)
+			registers[registerB] = result
+		// cdv
+		case 7:
+			numerator := registers[registerA]
+			denominator := math.Pow(2, float64(getComboOperand(operand)))
+			result := numerator / int(denominator)
+			registers[registerC] = result
+		default:
+			log.Fatalf("OpCode %d not supported.", opCode)
+		}
+
+		i += 2
+		if i >= len(program) {
+			break
+		}
+	}
+
+	fmt.Println()
+
+	return registers
+}
+
+func parse(input []string) (registers, program []int) {
+	registers = []int{0, 0, 0}
+	program = []int{}
+
+	for _, line := range input {
+		elements := strings.Split(line, ":")
+
+		switch elements[0] {
+		case "Register A":
+			registers[registerA] = toInt(strings.Trim(elements[1], " "))
+		case "Register B":
+			registers[registerB] = toInt(strings.Trim(elements[1], " "))
+		case "Register C":
+			registers[registerC] = toInt(strings.Trim(elements[1], " "))
+		case "Program":
+			numbers := strings.Split(strings.Trim(elements[1], " "), ",")
+			for _, number := range numbers {
+				program = append(program, toInt(number))
+			}
+		}
+	}
+
+	return registers, program
+}
+
+func toInt(s string) int {
+	result, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		log.Fatalf("Cannot convert %s to a number", s)
+	}
+	return int(result)
+}
