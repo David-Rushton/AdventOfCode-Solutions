@@ -171,6 +171,35 @@
             "env": {
                 "aoc_day": "17"
             }
+        },
+        {
+            "name": "D18 S1",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day18",
+            "args": [
+                "-v"
+            ],
+            "env": {
+                "aoc_day": "18"
+            }
+        },
+        {
+            "name": "D19 S1",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day19",
+            "args": [
+                "-t",
+                "-v"
+            ],
+            "env": {
+                "aoc_day": "19"
+            }
         }
     ]
 }
