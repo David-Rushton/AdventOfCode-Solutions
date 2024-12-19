@@ -76,7 +76,7 @@ func plot(addresses []point) int {
 		queue = queue[1:]
 
 		iteration++
-		if aoc.VerboseMode && iteration%500 == 0 {
+		if aoc.VerboseMode && iteration%100 == 0 {
 			fmt.Println("\x1b[1;1H")
 			fmt.Printf("Queue: %d\r", len(queue))
 			printMemory(addresses, current)
@@ -84,7 +84,6 @@ func plot(addresses []point) int {
 
 		if current.point == exit {
 			if current.steps < fewestSteps {
-				// printMemory(addresses, current)
 				fewestSteps = current.steps
 			}
 			continue
