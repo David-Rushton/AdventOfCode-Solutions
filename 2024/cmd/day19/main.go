@@ -41,7 +41,6 @@ func getPermutations(towels []string, pattern string) int {
 	var result int
 
 	queue := []state{{pattern: "", score: 1}}
-
 	for len(queue) > 0 {
 		current := queue[0]
 		queue = queue[1:]
@@ -79,7 +78,5 @@ func getPermutations(towels []string, pattern string) int {
 
 func parse(input []string) (towels []string, patterns []string) {
 	towels = strings.Split(strings.Replace(input[0], ",", "", -1), " ")
-	patterns = input[2:]
-
-	return towels, patterns
+	return towels, input[2:]
 }
