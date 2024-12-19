@@ -21,7 +21,10 @@ func main() {
 			permutationsTotal += permutations
 			possibleCount++
 		}
-		fmt.Printf("  Permutations: % 15d | Pattern: %s\n", permutations, pattern)
+
+		if aoc.VerboseMode {
+			fmt.Printf("  Permutations: % 15d | Pattern: %s\n", permutations, pattern)
+		}
 	}
 
 	fmt.Println()
@@ -42,10 +45,6 @@ func getPermutations(towels []string, pattern string) int {
 	for len(queue) > 0 {
 		current := queue[0]
 		queue = queue[1:]
-
-		if len(queue) > 50 {
-			fmt.Print("big")
-		}
 
 		if current.pattern == pattern {
 			result += current.score
