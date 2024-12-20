@@ -7,6 +7,16 @@ import (
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2024/internal/aoc"
 )
 
+type shortcut struct {
+	start point
+	end   offset
+}
+
+type offset struct {
+	point    point
+	distance int
+}
+
 type point struct {
 	x int
 	y int
@@ -19,8 +29,14 @@ func main() {
 	start, end, walls := parse((aoc.Input))
 	width := len(aoc.Input[0])
 	height := len(aoc.Input)
+
+	radius := 2
+	if aoc.Star == aoc.StarTwo {
+		radius = 20
+	}
+
 	route := findRoute(start, end, walls)
-	savings := findShortcuts(route, walls)
+	savings := findShortcuts(route, walls, radius)
 
 	print(start, end, width, height, make(map[point]int), walls)
 
@@ -57,85 +73,72 @@ func findRoute(start, end point, walls map[point]int) map[point]int {
 		}
 
 		for _, offset := range getOffsets(current, 1) {
-			if _, found := visited[offset]; found {
+			if _, found := visited[offset.point]; found {
 				continue
 			}
 
-			if _, found := walls[offset]; found {
+			if _, found := walls[offset.point]; found {
 				continue
 			}
 
-			queue = append(queue, offset)
+			queue = append(queue, offset.point)
 		}
 	}
 
 	panic("Cannot find route")
 }
 
-func findShortcuts(route, walls map[point]int) map[int]int {
-	result := make(map[int]int)
-
+func findShortcuts(route, walls map[point]int, radius int) map[int]int {
 	// Cheat!
+	shortcuts := make(map[shortcut]int)
 	for current, step := range route {
 		fmt.Printf("Checking %d,%d\r", current.x, current.y)
 
-		candidates := map[point]int{current: 1}
-		for i := 0; i < 2; i++ {
-			nextCandidates := make(map[point]int)
-			for candidate := range candidates {
-				for _, offset := range getOffsets(candidate, 1) {
-					if offset == current {
-						continue
-					}
-
-					// 1st move *must* deviate from route (or we are not cheating).
-					_, inWall := walls[offset]
-					if i == 0 && inWall {
-						nextCandidates[offset]++
-					}
-
-					// 2nd move *must* rejoin route.
-					routeStep, inRoute := route[offset]
-					if i == 1 && inRoute {
-						saving := routeStep - step - i - 1
-						if saving > 0 {
-							result[saving]++
-
-							if aoc.VerboseMode {
-								shortcut := make(map[point]int)
-								for k, v := range route {
-									if v <= step || v >= routeStep {
-										shortcut[k] = v
-									}
-								}
-
-								fmt.Printf("Saving: %d\n", saving)
-								print(candidate, offset, 15, 15, shortcut, walls)
-							}
-						}
-					}
+		offsets := getOffsets(current, radius)
+		for _, offset := range offsets {
+			routeStep, inRoute := route[offset.point]
+			if inRoute {
+				saving := routeStep - step - offset.distance
+				if saving > 0 {
+					shortcuts[shortcut{current, offset}] = saving
 				}
 			}
-			candidates = nextCandidates
+		}
+	}
+
+	// Transform to summary.
+	result := make(map[int]int)
+	for _, saving := range shortcuts {
+		result[saving]++
+	}
+
+	return result
+}
+
+func getOffsets(from point, radius int) []offset {
+	result := []offset{}
+
+	for y := radius * -1; y <= radius; y++ {
+		for x := radius * -1; x <= radius; x++ {
+			candidatePoint := point{from.x + x, from.y + y}
+			candidate := offset{
+				candidatePoint,
+				getDistance(from, candidatePoint),
+			}
+
+			if candidate.distance > 0 && candidate.distance <= radius {
+				result = append(result, candidate)
+			}
 		}
 	}
 
 	return result
 }
 
-func getOffsets(from point, radius int) []point {
-	result := []point{}
-
-	for y := radius * -1; y <= radius; y++ {
-		for x := radius * -1; x <= radius; x++ {
-			move := math.Abs(float64(y)) + math.Abs(float64(x))
-			if move <= float64(radius) {
-				result = append(result, point{from.x + x, from.y + y})
-			}
-		}
-	}
-
-	return result
+func getDistance(from, until point) int {
+	xDistance := math.Abs(float64(from.x - until.x))
+	yDistance := math.Abs(float64(from.y - until.y))
+	return int(xDistance + yDistance)
 }
 
 func parse(input []string) (start, end point, walls map[point]int) {
