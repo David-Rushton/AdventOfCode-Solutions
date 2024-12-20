@@ -200,6 +200,21 @@
             "env": {
                 "aoc_day": "19"
             }
+        },
+        {
+            "name": "D20 S1",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day20",
+            "args": [
+                "-t",
+                "-v"
+            ],
+            "env": {
+                "aoc_day": "20"
+            }
         }
     ]
 }
