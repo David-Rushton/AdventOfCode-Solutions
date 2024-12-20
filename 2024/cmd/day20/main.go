@@ -92,7 +92,6 @@ func findShortcuts(route, walls map[point]int, radius int) map[int]int {
 	// Cheat!
 	shortcuts := make(map[shortcut]int)
 	for current, step := range route {
-		fmt.Printf("Checking %d,%d\r", current.x, current.y)
 
 		offsets := getOffsets(current, radius)
 		for _, offset := range offsets {
