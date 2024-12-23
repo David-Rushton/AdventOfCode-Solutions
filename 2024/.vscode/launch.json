@@ -217,6 +217,21 @@
             }
         },
         {
+            "name": "D21 S1",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day21",
+            "args": [
+                "-t",
+                "-v"
+            ],
+            "env": {
+                "aoc_day": "21"
+            }
+        },
+        {
             "name": "D22 S1",
             "type": "go",
             "request": "launch",
