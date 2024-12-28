@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -18,15 +19,144 @@ func main() {
 	powerUp(gates, initialValues)
 	x, y, z := getReadings(wires)
 
-	fmt.Println("---------")
-	fmt.Println(len(wires))
-	fmt.Println("---------")
-
 	fmt.Println()
 	fmt.Printf("Reading x: % 16d\n", x)
 	fmt.Printf("Reading y: % 16d\n", y)
 	fmt.Printf("Reading z: % 16d\n", z)
 	fmt.Printf("Result:    % 16d\n", z-(x+y))
+
+	fmt.Println()
+	fmt.Println()
+
+	// index by out.
+	outs := make(map[string]*gate)
+	zs := make(map[string]int)
+	zKey := []string{}
+
+	for _, connectedGates := range gates {
+		for _, connectedGate := range connectedGates {
+			outs[connectedGate.Out.name] = connectedGate
+
+			if strings.HasPrefix(connectedGate.Out.name, "z") {
+				zs[connectedGate.Out.name]++
+
+				if !slices.Contains(zKey, connectedGate.Out.name) {
+					zKey = append(zKey, connectedGate.Out.name)
+				}
+			}
+		}
+	}
+
+	candidates := []string{
+		"z06",
+		"z07",
+		"z08",
+		"z09",
+		"z10",
+		"z11",
+		"z12",
+		"z13",
+	}
+
+	// let's work back from the outputs.
+	for outName := range outs {
+		queue := []string{outName}
+		visited := make(map[string]bool)
+		hits := 0
+
+		for len(queue) > 0 {
+			current := queue[0]
+			queue = queue[1:]
+
+			if visited[current] {
+				continue
+			}
+
+			fmt.Printf("  %v\n", current)
+
+			visited[current] = true
+
+			for _, n := range []string{outs[current].leftIn.name, outs[current].rightIn.name} {
+				if _, exists := outs[n]; exists {
+					hits++
+					queue = append(queue, outs[current].leftIn.name, outs[current].rightIn.name)
+				} else {
+					// fmt.Printf("!")
+				}
+			}
+		}
+
+		// fmt.Printf("  %v", current)
+		fmt.Printf(" %v == %d\n", outName, hits)
+		zs[outName] = hits
+
+		fmt.Println()
+		fmt.Println()
+
+		check := []string{
+			"bnt",
+			"fcd",
+			"fjv",
+			"gbd",
+			"kwb",
+			"nmm",
+			"z06",
+			"z07",
+			"z08",
+			"z09",
+			"z10",
+			"z11",
+			"z12",
+			"z13",
+		}
+
+		for _, yyy := range check {
+			if _, exists := outs[yyy]; exists {
+				fmt.Println(yyy)
+			}
+		}
+	}
+
+	fmt.Println()
+	fmt.Println()
+
+	slices.Sort(zKey)
+
+	ex := -2
+	for _, k := range zKey {
+		if zs[k] != ex || true {
+			fmt.Printf("  %s % 3d % 3d\n", k, zs[k], ex)
+		}
+		ex += 4
+	}
+
+	// ?
+	fmt.Println()
+	fmt.Println()
+
+	for _, k := range candidates {
+		if zs[k] != ex {
+			fmt.Printf("  %v ( %v, %v ) \n", k, outs[k].leftIn.name, outs[k].rightIn.name)
+		}
+		ex += 4
+	}
+
+}
+
+func someIdea() {
+	// z00   0  -2
+	// -----------
+	// z06   0  22
+	// z07  28  26
+	// z08  32  30
+	// z09  36  34
+	// z10  40  38
+	// z11  44  42
+	// z12  48  46
+	// z13  54  50
+	// -----------
+	// z45  176  178
+
 }
 
 func getReadings(wires map[string]*wire) (x, y, z int64) {
