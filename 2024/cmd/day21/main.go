@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2024/internal/aoc"
 )
@@ -97,13 +98,12 @@ func main() {
 
 	var result int
 	for _, code := range aoc.Input {
-		fmt.Printf("%v\n", code)
+		fmt.Printf("  %v | ", code)
 
 		sequence := getNumericRoute(code)
 
 		for i := 0; i < levels; i++ {
-			sequence = getDirectionalRoute(sequence)
-			fmt.Printf(" %v(%v) %v\n", i, len(sequence), "sequence")
+			sequence = getDirectionalRouteV2(sequence)
 		}
 
 		codeValue, err := strconv.ParseInt(code[0:3], 10, 64)
@@ -111,23 +111,40 @@ func main() {
 			log.Fatalf("Cannot convert %s to number.", code[0:3])
 		}
 
-		fmt.Printf("  %v * %v = %v\n", len(sequence), codeValue, int(codeValue)*len(sequence))
-		fmt.Println()
+		fmt.Printf("  % 5d * % 5d = % 8d\n", sequence.GetLen(), codeValue, int(codeValue)*sequence.GetLen())
 
-		result += int(codeValue) * len(sequence)
+		result += int(codeValue) * sequence.GetLen()
 	}
 
 	fmt.Println()
 	fmt.Printf("Results: %d\n", result)
 }
 
-func getNumericRoute(code string) string {
-	result := ""
-
+func getNumericRoute(code string) sequence {
+	route := ""
 	from := 'A'
 	for _, to := range code {
-		result += getRoute(numericKeypad, numericPoints, from, to)
+		route += getRoute(numericKeypad, numericPoints, from, to)
 		from = to
+	}
+
+	result := make(sequence)
+	for _, section := range strings.Split(route, "A")[0:4] {
+		result[section+"A"]++
+	}
+
+	return result
+}
+
+func getDirectionalRouteV2(sequences sequence) sequence {
+	result := make(sequence)
+
+	for code, count := range sequences {
+		sections := strings.Split(getDirectionalRoute(code), "A")
+		sections = sections[0 : len(sections)-1]
+		for _, section := range sections {
+			result[section+"A"] += count
+		}
 	}
 
 	return result
