@@ -5,15 +5,9 @@ import (
 	"math"
 	"slices"
 	"strconv"
-	"strings"
 
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2024/internal/aoc"
 )
-
-type directedPoint struct {
-	direction rune
-	point     point
-}
 
 type point struct {
 	x int
@@ -93,117 +87,6 @@ func main() {
 	fmt.Printf("Results: %d\n", result)
 }
 
-func getNumericRoute(code string) sequence {
-	route := ""
-	from := 'A'
-	for _, to := range code {
-		route += getRoute(numericKeypad, numericPoints, from, to)
-		from = to
-	}
-
-	result := make(sequence)
-	for _, section := range strings.Split(route, "A")[0:4] {
-		result[section+"A"]++
-	}
-
-	return result
-}
-
-func getDirectionalSequence(sequences sequence) sequence {
-	result := make(sequence)
-
-	for code, count := range sequences {
-		sections := strings.Split(getDirectionalRoute(code), "A")
-		sections = sections[0 : len(sections)-1]
-		for _, section := range sections {
-			result[section+"A"] += count
-		}
-	}
-
-	return result
-}
-
-func getDirectionalRoute(code string) string {
-	result := ""
-
-	from := 'A'
-	for _, to := range code {
-		result += getRoute(directionKeypad, directionPoints, from, to)
-		from = to
-	}
-
-	return result
-}
-
-func getRoute(keypad keypad, points points, from, to rune) string {
-	type state struct {
-		point     point
-		score     int
-		direction rune
-		path      string
-	}
-
-	queue := []state{{
-		point:     keypad[from],
-		score:     0,
-		direction: 'X',
-		path:      ""}}
-	visited := make(map[point]bool)
-	bestScore := math.MaxInt
-	result := ""
-
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-
-		if current.score > bestScore {
-			continue
-		}
-
-		if current.point == keypad[to] {
-			if current.score < bestScore {
-				bestScore = current.score
-			}
-
-			if current.score == bestScore {
-				result = current.path + "A"
-			}
-
-			continue
-		}
-
-		for _, neighbour := range getNeighbours(current.point) {
-			if points[neighbour.point] && !visited[neighbour.point] {
-				score := 1
-				if current.direction != neighbour.direction {
-					score = 100
-				}
-
-				queue = append(queue, state{
-					neighbour.point,
-					current.score + score,
-					neighbour.direction,
-					current.path + string(neighbour.direction)})
-			}
-		}
-
-		visited[current.point] = true
-	}
-
-	return result
-}
-
-func getNeighbours(from point) []directedPoint {
-	return []directedPoint{
-		{'^', point{from.x + 0, from.y - 1}},
-		{'>', point{from.x + 1, from.y + 0}},
-		{'v', point{from.x + 0, from.y + 1}},
-		{'<', point{from.x - 1, from.y + 0}},
-	}
-}
-
-// -----
-
 func getCodeLen(code string, maxLevel int) int {
 	result := math.MaxInt
 
@@ -225,27 +108,6 @@ func getCodeLen(code string, maxLevel int) int {
 
 		if currentSequence.GetLen() < result {
 			result = currentSequence.GetLen()
-		}
-	}
-
-	return result
-}
-
-func getBestRoutes(routes []string) []string {
-	result := []string{}
-	bestLen := math.MaxInt
-
-	for _, route := range routes {
-		subRoutes := getDirectionalRoutes(route)
-		routeLen := len(subRoutes[0])
-
-		if routeLen < bestLen {
-			bestLen = routeLen
-			result = []string{}
-		}
-
-		if routeLen == bestLen {
-			result = append(result, subRoutes...)
 		}
 	}
 
@@ -392,5 +254,3 @@ func getRoutes(keypad keypad, points points, from, to rune) []string {
 
 	return result
 }
-
-// -----

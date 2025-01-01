@@ -39,10 +39,6 @@ var routeCache = map[routeCacheKey]string{
 }
 
 func buildRouteCache() {
-
-	// DEBUG: Remove later.
-	return
-
 	keys := "^>v<A"
 
 	for _, from := range keys {
@@ -80,18 +76,6 @@ func getLen(route string) int {
 				}
 			}
 		}
-	}
-
-	return result
-}
-
-func getExtendedCachedRoute(route string) string {
-	var result string
-
-	from := 'A'
-	for _, to := range route {
-		result += getCachedRoute(from, to)
-		from = to
 	}
 
 	return result
