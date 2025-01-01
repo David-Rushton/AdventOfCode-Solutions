@@ -13,8 +13,8 @@
             "program": "${workspaceFolder}\\cmd\\day21",
             "args": [
                 "-t",
-                "-v",
-                "-2"
+                "-2",
+                // "-v"
             ],
             "env": {
                 "aoc_day": "21"
