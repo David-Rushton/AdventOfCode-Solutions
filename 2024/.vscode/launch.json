@@ -5,19 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "D24 S2",
+            "name": "D25 S2",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}\\cmd\\day24",
+            "program": "${workspaceFolder}\\cmd\\day25",
             "args": [
-                // "-t",
+                "-t",
                 "-2",
                 "-v"
             ],
             "env": {
-                "aoc_day": "24"
+                "aoc_day": "25"
             }
         }
     ]
