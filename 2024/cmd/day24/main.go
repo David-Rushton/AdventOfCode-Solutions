@@ -24,139 +24,91 @@ func main() {
 	fmt.Printf("Reading y: % 16d\n", y)
 	fmt.Printf("Reading z: % 16d\n", z)
 	fmt.Printf("Result:    % 16d\n", z-(x+y))
-
-	fmt.Println()
-	fmt.Println()
-
-	// index by out.
-	outs := make(map[string]*gate)
-	zs := make(map[string]int)
-	zKey := []string{}
-
-	for _, connectedGates := range gates {
-		for _, connectedGate := range connectedGates {
-			outs[connectedGate.Out.name] = connectedGate
-
-			if strings.HasPrefix(connectedGate.Out.name, "z") {
-				zs[connectedGate.Out.name]++
-
-				if !slices.Contains(zKey, connectedGate.Out.name) {
-					zKey = append(zKey, connectedGate.Out.name)
-				}
-			}
-		}
-	}
-
-	candidates := []string{
-		"z06",
-		"z07",
-		"z08",
-		"z09",
-		"z10",
-		"z11",
-		"z12",
-		"z13",
-	}
-
-	// let's work back from the outputs.
-	for outName := range outs {
-		queue := []string{outName}
-		visited := make(map[string]bool)
-		hits := 0
-
-		for len(queue) > 0 {
-			current := queue[0]
-			queue = queue[1:]
-
-			if visited[current] {
-				continue
-			}
-
-			fmt.Printf("  %v\n", current)
-
-			visited[current] = true
-
-			for _, n := range []string{outs[current].leftIn.name, outs[current].rightIn.name} {
-				if _, exists := outs[n]; exists {
-					hits++
-					queue = append(queue, outs[current].leftIn.name, outs[current].rightIn.name)
-				} else {
-					// fmt.Printf("!")
-				}
-			}
-		}
-
-		// fmt.Printf("  %v", current)
-		fmt.Printf(" %v == %d\n", outName, hits)
-		zs[outName] = hits
-
-		fmt.Println()
-		fmt.Println()
-
-		check := []string{
-			"bnt",
-			"fcd",
-			"fjv",
-			"gbd",
-			"kwb",
-			"nmm",
-			"z06",
-			"z07",
-			"z08",
-			"z09",
-			"z10",
-			"z11",
-			"z12",
-			"z13",
-		}
-
-		for _, yyy := range check {
-			if _, exists := outs[yyy]; exists {
-				fmt.Println(yyy)
-			}
-		}
-	}
-
-	fmt.Println()
-	fmt.Println()
-
-	slices.Sort(zKey)
-
-	ex := -2
-	for _, k := range zKey {
-		if zs[k] != ex || true {
-			fmt.Printf("  %s % 3d % 3d\n", k, zs[k], ex)
-		}
-		ex += 4
-	}
-
-	// ?
-	fmt.Println()
-	fmt.Println()
-
-	for _, k := range candidates {
-		if zs[k] != ex {
-			fmt.Printf("  %v ( %v, %v ) \n", k, outs[k].leftIn.name, outs[k].rightIn.name)
-		}
-		ex += 4
-	}
-
+	fmt.Printf("Faulty:    %v\n", strings.Join(getFaultyWires(gates), ","))
 }
 
-func someIdea() {
-	// z00   0  -2
-	// -----------
-	// z06   0  22
-	// z07  28  26
-	// z08  32  30
-	// z09  36  34
-	// z10  40  38
-	// z11  44  42
-	// z12  48  46
-	// z13  54  50
-	// -----------
-	// z45  176  178
+func getFaultyWires(gates map[string][]*gate) []string {
+	allGates := map[*gate]bool{}
+	for _, connected := range gates {
+		for _, current := range connected {
+			allGates[current] = true
+		}
+	}
 
+	faulty := []string{}
+	for current := range allGates {
+		// if output is z should be XOR
+		if current.Out.name[0] == 'z' && current.operator != operatorXOr {
+			if current.Out.name != "z45" {
+				faulty = append(faulty, current.Out.name)
+			}
+		}
+
+		// if output is z and inputs are not x,y then not XOR
+		if current.Out.name[0] != 'z' {
+			if !(current.leftIn.name[0] == 'x' || current.leftIn.name[0] == 'y') {
+				if !(current.rightIn.name[1] == 'x' || current.rightIn.name[1] == 'y') {
+					if current.operator == operatorXOr {
+						faulty = append(faulty, current.Out.name)
+					}
+				}
+
+			}
+		}
+
+		// if XOR with x,y in
+		// must be another XOR gate that takes this as in input
+		if current.operator == operatorXOr {
+			if current.leftIn.name[0] == 'x' || current.leftIn.name[0] == 'y' {
+				if current.rightIn.name[0] == 'x' || current.rightIn.name[0] == 'y' {
+					if !(current.leftIn.name == "x00" || current.leftIn.name == "y00") {
+						if !(current.rightIn.name == "x00" || current.rightIn.name == "y00") {
+							if len(gates[current.Out.name]) > 0 {
+								var xOrFound bool
+								for _, child := range gates[current.Out.name] {
+									if child.operator == operatorXOr {
+										xOrFound = true
+									}
+								}
+
+								if !xOrFound {
+									faulty = append(faulty, current.Out.name)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// if AND with x,y in
+		// must be another OR gate that takes this as in input
+		if current.operator == operatorAnd {
+			if current.leftIn.name[0] == 'x' || current.leftIn.name[0] == 'y' {
+				if current.rightIn.name[0] == 'x' || current.rightIn.name[0] == 'y' {
+					if !(current.leftIn.name == "x00" || current.leftIn.name == "y00") {
+						if !(current.rightIn.name == "x00" || current.rightIn.name == "y00") {
+							if len(gates[current.Out.name]) > 0 {
+								var orFound bool
+								for _, child := range gates[current.Out.name] {
+									if child.operator == operatorOr {
+										orFound = true
+									}
+								}
+
+								if !orFound {
+									faulty = append(faulty, current.Out.name)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	slices.Sort(faulty)
+	return faulty
 }
 
 func getReadings(wires map[string]*wire) (x, y, z int64) {

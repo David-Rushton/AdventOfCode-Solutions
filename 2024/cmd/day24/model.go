@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -17,6 +18,28 @@ type gate struct {
 	rightIn  *wire
 	Out      *wire
 	operator gateOperator
+}
+
+func (g *gate) String() string {
+	return fmt.Sprintf(
+		"  %v %v %v => %v",
+		g.leftIn.name,
+		g.operator,
+		g.rightIn.name,
+		g.Out.name)
+}
+
+func (gOp gateOperator) String() string {
+	switch gOp {
+	case operatorAnd:
+		return "AND"
+	case operatorOr:
+		return "OR "
+	case operatorXOr:
+		return "XOR"
+	}
+
+	panic("Operator not supported")
 }
 
 func (g *gate) hasValue() bool {
