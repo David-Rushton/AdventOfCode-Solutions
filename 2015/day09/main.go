@@ -20,10 +20,12 @@ func main() {
 	fmt.Println()
 
 	locationDistances := parse(aoc.GetInput(9))
-	result := getShortestRoute(locationDistances)
+	shortest := getShortestRoute(locationDistances)
+	longest := getLongestRoute(locationDistances)
 
 	fmt.Println()
-	fmt.Printf("Result: %d\n", result)
+	fmt.Printf("Shortest: %d\n", shortest)
+	fmt.Printf("Shortest: %d\n", longest)
 }
 
 func getShortestRoute(locations map[locationName][]destination) int {
@@ -77,6 +79,55 @@ func getShortestRoute(locations map[locationName][]destination) int {
 	}
 
 	return shortestRoute
+}
+
+func getLongestRoute(locations map[locationName][]destination) int {
+	var longestRoute = 0
+
+	type state struct {
+		at       locationName
+		distance int
+		route    string
+		visited  map[locationName]bool
+	}
+
+	for start := range locations {
+		queue := []state{{
+			at:       start,
+			distance: 0,
+			route:    string(start),
+			visited:  map[locationName]bool{start: true}}}
+
+		for len(queue) > 0 {
+			current := queue[0]
+			queue = queue[1:]
+
+			if len(current.visited) == len(locations) {
+				if current.distance > longestRoute {
+					fmt.Printf(" - Candidate: %v == %d\n", current.route, current.distance)
+					longestRoute = current.distance
+				}
+
+				continue
+			}
+
+			for _, candidate := range locations[current.at] {
+				if !current.visited[candidate.name] {
+					newVisited := map[locationName]bool{}
+					maps.Copy(newVisited, current.visited)
+					newVisited[candidate.name] = true
+
+					queue = append(queue, state{
+						at:       candidate.name,
+						distance: current.distance + candidate.distance,
+						route:    current.route + " > " + string(candidate.name),
+						visited:  newVisited})
+				}
+			}
+		}
+	}
+
+	return longestRoute
 }
 
 func parse(input []string) map[locationName][]destination {
