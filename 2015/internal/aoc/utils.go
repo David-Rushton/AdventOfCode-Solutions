@@ -53,6 +53,11 @@ func GetInput(day int) []string {
 	return strings.Split(content, "\n")
 }
 
+func IsInt(s string) bool {
+	_, err := strconv.ParseInt(s, 10, 64)
+	return err == nil
+}
+
 func ToInt(s string) int {
 	num, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
