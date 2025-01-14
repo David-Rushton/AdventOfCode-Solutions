@@ -25,7 +25,7 @@ func main() {
 	current := seed
 	for i := 0; i < iterations; i++ {
 		fmt.Printf("  - % 3d >> %v\n", i, current.getLen())
-		current = getNextV2(current)
+		current = getNext(current)
 	}
 	fmt.Printf("  - % 3d >> %v\n", iterations, current.getLen())
 
@@ -45,7 +45,7 @@ func toChunks(seed string) chunks {
 	return result
 }
 
-func getNextV2(values chunks) chunks {
+func getNext(values chunks) chunks {
 	result := newChunks()
 
 	for _, item := range values.items {
@@ -56,26 +56,4 @@ func getNextV2(values chunks) chunks {
 	result.flush()
 
 	return result
-}
-
-func getNext(value string) string {
-	buffer := ""
-	counter := 0
-	current := 'x'
-
-	// HACK: We apply a trailing character to force the final flush to the buffer.
-	for _, r := range value + "-" {
-		if r != current {
-			if counter > 0 {
-				buffer += fmt.Sprintf("%v", counter) + string(current)
-			}
-
-			counter = 1
-			current = r
-		} else {
-			counter++
-		}
-	}
-
-	return buffer
 }
