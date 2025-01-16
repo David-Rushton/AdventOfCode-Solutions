@@ -50,7 +50,7 @@ func GetInput(day int) []string {
 	content := string(data)
 	content = strings.ReplaceAll(content, "\r", "")
 
-	return strings.Split(content, "\n")
+	return strings.Split(strings.TrimRight(content, "\n"), "\n")
 }
 
 func IsInt(s string) bool {
