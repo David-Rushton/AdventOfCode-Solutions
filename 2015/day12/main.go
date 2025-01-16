@@ -7,6 +7,7 @@ import (
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2015/internal/aoc"
 )
 
+// !58042
 func main() {
 	fmt.Println("--- Day 12: JSAbacusFramework.io ---")
 	fmt.Println()
@@ -26,7 +27,7 @@ func main() {
 			data["some-key"] = arrayData
 		}
 
-		leafNodes := getLeafNodes(data)
+		leafNodes := getLeafNodes(data, aoc.Star == aoc.StarTwo)
 		for _, node := range leafNodes {
 			switch nodeType := node.(type) {
 			case float64:
@@ -46,27 +47,39 @@ func main() {
 	fmt.Println()
 }
 
-func getLeafNodes(data map[string]interface{}) []interface{} {
+func getLeafNodes(data map[string]interface{}, skipRed bool) []interface{} {
 	var result []interface{}
 
 	for _, value := range data {
+		var valueResult []interface{}
+
 		switch valueType := value.(type) {
 		case map[string]interface{}:
-			result = append(result, getLeafNodes(valueType)...)
+			valueResult = append(valueResult, getLeafNodes(valueType, skipRed)...)
 		case []interface{}:
+			var elementResult []interface{}
+
 			for _, element := range valueType {
 				switch elementType := element.(type) {
 				case map[string]interface{}:
-					result = append(result, getLeafNodes(elementType)...)
+					elementResult = append(elementResult, getLeafNodes(elementType, skipRed)...)
 				case []interface{}:
-					result = append(result, getLeafNodes(map[string]interface{}{"array": elementType})...)
+					elementResult = append(elementResult, getLeafNodes(map[string]interface{}{"array": elementType}, skipRed)...)
 				default:
-					result = append(result, elementType)
+					elementResult = append(elementResult, elementType)
 				}
 			}
+
+			valueResult = append(valueResult, elementResult...)
+		case string:
+			if skipRed && valueType == "red" {
+				return []interface{}{}
+			}
 		default:
-			result = append(result, value)
+			valueResult = append(valueResult, value)
 		}
+
+		result = append(result, valueResult...)
 	}
 
 	return result
