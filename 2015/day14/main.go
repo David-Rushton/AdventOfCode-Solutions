@@ -52,7 +52,7 @@ func runRace(reindeers []*reindeer) (bestScore, bestDistance int) {
 	// Find winners.
 	for _, current := range reindeers {
 		fmt.Printf(
-			" - %d travelled %d and scored %d\n",
+			" - %v travelled %d and scored %d\n",
 			current.Name,
 			current.GetDistanceTravelled(),
 			current.GetPoints())
