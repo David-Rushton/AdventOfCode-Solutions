@@ -17,23 +17,50 @@ func main() {
 		frames = 4
 	}
 
+	cornersOn := false
+	if aoc.Star == aoc.StarTwo {
+		cornersOn = true
+	}
+
 	lights := parse(aoc.GetInput(18))
-	lights = animate(frames, lights)
+	lights = animate(frames, cornersOn, lights)
 	result := countIlluminated(lights)
 
 	fmt.Println()
 	fmt.Printf("Result: %d\n", result)
 }
 
-func animate(frames int, lights [][]bool) [][]bool {
+func animate(frames int, cornersOn bool, lights [][]bool) [][]bool {
 	printFrame(-1, lights)
 
+	// Assumes rectangle.
+	firstX := 0
+	firstY := 0
+	lastX := len(lights[firstY]) - 1
+	lastY := len(lights) - 1
+
+	// When requested, override corners.
+	// Must occur before we start comparing lights to each other.
 	current := lights
+	if cornersOn {
+		current[firstY][firstX] = true
+		current[firstY][lastX] = true
+		current[lastY][firstX] = true
+		current[lastY][lastX] = true
+	}
+
 	for frame := 0; frame < frames; frame++ {
 		next := deepCopy(current)
 
 		for y, row := range current {
 			for x, illuminated := range row {
+				if y == firstY || y == lastY {
+					if x == firstX || x == lastX {
+						next[x][y] = true
+						continue
+					}
+				}
+
 				illuminatedNeighbours := countIlluminatedNeighbours(x, y, current)
 
 				if illuminated && (illuminatedNeighbours < 2 || illuminatedNeighbours > 3) {
