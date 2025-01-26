@@ -92,8 +92,7 @@ func compute(program []int64) int64 {
 	}
 
 	// ut oh
-	log.Fatalf("This is not my beautiful house")
-	return -1
+	panic("This is not my beautiful house")
 }
 
 func parse() [][]int64 {
