@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2015/internal/aoc"
@@ -17,13 +18,15 @@ func main() {
 	fmt.Println()
 
 	replacements, molecule := parse(aoc.GetInput(19))
-	result := countMolecules(replacements, molecule)
+	calibration := getCalibration(replacements, molecule)
+	fabrication := getFabrication(replacements, molecule)
 
 	fmt.Println()
-	fmt.Printf("Result: %d", result)
+	fmt.Printf("Calibration: %d\n", calibration)
+	fmt.Printf("Fabrication: %d\n", fabrication)
 }
 
-func countMolecules(replacements []replacement, molecule string) int {
+func getCalibration(replacements []replacement, molecule string) int {
 	result := map[string]bool{}
 
 	for _, replacement := range replacements {
@@ -35,7 +38,7 @@ func countMolecules(replacements []replacement, molecule string) int {
 
 			if !result[candidate] {
 				result[candidate] = true
-				fmt.Printf(" - Molecule found: %v\n", candidate)
+				fmt.Printf(" - Molecule found %v\n", candidate)
 			}
 
 			start++
@@ -44,6 +47,43 @@ func countMolecules(replacements []replacement, molecule string) int {
 	}
 
 	return len(result)
+}
+
+// TODO: Returns correct result, but then hangs.
+// Suspect we are stuck in some endless solve recursion.
+func getFabrication(replacements []replacement, molecule string) int {
+	const target = "e"
+	bestSteps := math.MaxInt
+	var solve func(string, int)
+
+	solve = func(current string, steps int) {
+		if current == target {
+			if steps < bestSteps {
+				bestSteps = steps
+				fmt.Printf(" - Molecule fabricated in %d steps\n", steps)
+			}
+
+			return
+		}
+
+		if steps >= bestSteps {
+			return
+		}
+
+		for _, replacement := range replacements {
+			if idx := strings.Index(current, replacement.with); idx > -1 {
+				candidate := current[0:idx]
+				candidate += replacement.section
+				candidate += current[idx+len(replacement.with):]
+
+				solve(candidate, steps+1)
+			}
+		}
+	}
+
+	solve(molecule, 0)
+
+	return bestSteps
 }
 
 func indexAt(s, substr string, n int) int {
