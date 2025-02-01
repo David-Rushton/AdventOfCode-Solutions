@@ -27,23 +27,28 @@ func getResults(player, boss combatant, loadouts []loadout) (bestWin, worstLost 
 	worstLost = 0
 
 	for _, loadout := range loadouts {
+
 		goldSpent := loadout.getCost()
-		if playerWins(player, boss, loadout) {
+		isWinner := playerWins(player, boss, loadout)
+
+		if isWinner {
 			if goldSpent < bestWin {
 				bestWin = goldSpent
 				fmt.Printf(
-					" - New best loadout found.  Cost: % 4d.  Equipped: %v, %v, %v & %v.\n",
+					" - 🥊 New best loadout found.  Cost: % 4d.  Equipped: %v, %v, %v & %v.\n",
 					goldSpent,
 					loadout.weapon.name,
 					loadout.armour.name,
 					loadout.leftRing.name,
 					loadout.rightRing.name)
 			}
-		} else {
+		}
+
+		if !isWinner {
 			if goldSpent > worstLost {
 				worstLost = goldSpent
 				fmt.Printf(
-					" - New worst loadout found.  Cost: % 4d.  Equipped: %v, %v, %v & %v.\n",
+					" - 🪦 New worst loadout found.  Cost: % 4d.  Equipped: %v, %v, %v & %v.\n",
 					goldSpent,
 					loadout.weapon.name,
 					loadout.armour.name,

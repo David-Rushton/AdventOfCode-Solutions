@@ -7,7 +7,9 @@ func getLoadouts() []loadout {
 		for _, armour := range getArmours() {
 			for _, leftRing := range getRings() {
 				for _, rightRing := range getRings() {
-					result = append(result, loadout{weapon, armour, leftRing, rightRing})
+					if leftRing != rightRing {
+						result = append(result, loadout{weapon, armour, leftRing, rightRing})
+					}
 				}
 			}
 		}
