@@ -14,6 +14,7 @@ func main() {
 	player := newPlayer(50, 500)
 	boss := newBoss(71, 10)
 	spells := getSpells()
+	hardMode := false
 
 	if aoc.TestMode {
 		player.hitPoints = 10
@@ -23,13 +24,17 @@ func main() {
 		boss.damage = 8
 	}
 
-	lowestManaWin := findLowestManaWin(player, boss, spells)
+	if aoc.Star == aoc.StarTwo {
+		hardMode = true
+	}
+
+	lowestManaWin := findLowestManaWin(player, boss, spells, hardMode)
 
 	fmt.Println()
 	fmt.Printf("Lowest Mana Win: %d\n", lowestManaWin)
 }
 
-func findLowestManaWin(player Player, boss Boss, spells []Spell) int {
+func findLowestManaWin(player Player, boss Boss, spells []Spell, hardMode bool) int {
 	result := math.MaxInt
 
 	var solve func(Player, Boss, Effects)
@@ -47,7 +52,7 @@ func findLowestManaWin(player Player, boss Boss, spells []Spell) int {
 				continue
 			}
 
-			nextPlayer, nextBoss, nextEffects := playTurn(player, boss, effects, spell)
+			nextPlayer, nextBoss, nextEffects := playTurn(player, boss, effects, spell, hardMode)
 
 			if nextPlayer.hitPoints <= 0 {
 				continue
@@ -69,7 +74,15 @@ func findLowestManaWin(player Player, boss Boss, spells []Spell) int {
 	return result
 }
 
-func playTurn(player Player, boss Boss, effects Effects, spellToCast Spell) (Player, Boss, Effects) {
+func playTurn(player Player, boss Boss, effects Effects, spellToCast Spell, hardMode bool) (Player, Boss, Effects) {
+
+	if hardMode {
+		player.hitPoints--
+		if player.hitPoints <= 0 {
+			return player, boss, effects
+		}
+	}
+
 	// player turn
 	//	- apply effects
 	//	- cast spell
