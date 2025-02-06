@@ -66,3 +66,19 @@ func ToInt(s string) int {
 
 	return int(num)
 }
+
+func ClearScreen() {
+	fmt.Print("\033[H\033[2J")
+}
+
+func MoveCursor(row, col int) {
+	fmt.Printf("\033[%d;%dH", row, col)
+}
+
+func ShowCursor() {
+	fmt.Print("\033[?25h") // Show cursor
+}
+
+func HideCursor() {
+	fmt.Print("\033[?25l") // Hide cursor
+}
