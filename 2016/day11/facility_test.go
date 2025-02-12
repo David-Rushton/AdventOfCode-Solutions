@@ -40,6 +40,38 @@ func TestFacilityFactoryBuildReturnsExpectedState(t *testing.T) {
 	}
 }
 
+// TODO: Start here.  Test moving microchips and generators works.
+func TestSetMicrochipFloor(t *testing.T) {
+	ff := newFacilityFactory()
+	ff.addMicrochip("plutonium", 1) // bit 2 || isotope id 0
+	ff.addMicrochip("hydrogen", 1)  // bit 3 || isotope id 1
+	ff.addGenerator("plutonium", 2) // bit 4 || isotope id 0
+	ff.addGenerator("hydrogen", 2)  // bit 5 || isotope id 1
+	f := ff.build()
+
+	f.setMicrochipFloor(0, 0) // move plutonium to ground floor || bit 0
+	f.setGeneratorFloor(1, 3) // move hydrogen to top floor  || bit 7
+
+	expectedBits := []int{0, 3, 4, 7}
+	for bit := 0; bit < 8; bit++ {
+		if slices.Contains(expectedBits, bit) {
+			if !f.getBit(bit) {
+				t.Errorf("Expected bit %d to be set", bit)
+			}
+		}
+
+		if !slices.Contains(expectedBits, bit) {
+			if f.getBit(bit) {
+				t.Errorf("Expected bit %d to be unset", bit)
+			}
+		}
+	}
+}
+
+func TestSetGeneratorFloor(t *testing.T) {
+
+}
+
 func TestGetSetFloorRoundTrips(t *testing.T) {
 	ff := newFacilityFactory()
 	f := ff.build()
@@ -48,8 +80,39 @@ func TestGetSetFloorRoundTrips(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		f.setCurrentFloor(i)
 		if f.getCurrentFloor() != i {
-			t.Errorf("Expected current floor to be %d not %d", i, f.getCurrentFloor())
+			t.Errorf("Expected current floor to be %d not %d.", i, f.getCurrentFloor())
 		}
+	}
+}
+
+func TestGetSetBitRoundTrips(t *testing.T) {
+	ff := newFacilityFactory()
+	f := ff.build()
+
+	testBits := []int{0, 1, 10, 44, 63}
+	for _, bit := range testBits {
+		f.setBit(bit)
+		if !f.getBit(bit) {
+			t.Errorf("Expected bit %d to be set.", bit)
+		}
+	}
+}
+
+func TestSetClearBitRoundTrips(t *testing.T) {
+	ff := newFacilityFactory()
+	f := ff.build()
+
+	testBits := []int{0, 1, 10, 44, 63}
+	for _, bit := range testBits {
+		f.setBit(bit)
+		f.clearBit(bit)
+		if f.getBit(bit) {
+			t.Errorf("Expected bit %d to be unset.", bit)
+		}
+	}
+
+	if f.state != 0 {
+		t.Error("Expected state to be cleared.")
 	}
 }
 
