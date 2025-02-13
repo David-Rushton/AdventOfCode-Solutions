@@ -40,20 +40,17 @@ func TestFacilityFactoryBuildReturnsExpectedState(t *testing.T) {
 	}
 }
 
-// TODO: Start here.  Test moving microchips and generators works.
 func TestSetMicrochipFloor(t *testing.T) {
 	ff := newFacilityFactory()
-	ff.addMicrochip("plutonium", 1) // bit 2 || isotope id 0
-	ff.addMicrochip("hydrogen", 1)  // bit 3 || isotope id 1
-	ff.addGenerator("plutonium", 2) // bit 4 || isotope id 0
-	ff.addGenerator("hydrogen", 2)  // bit 5 || isotope id 1
+	ff.addMicrochip("plutonium", 1) // bit 4 || isotope id 0
+	ff.addMicrochip("hydrogen", 1)  // bit 5 || isotope id 1
 	f := ff.build()
 
 	f.setMicrochipFloor(0, 0) // move plutonium to ground floor || bit 0
-	f.setGeneratorFloor(1, 3) // move hydrogen to top floor  || bit 7
+	f.setMicrochipFloor(1, 3) // move hydrogen to top floor  || bit 13
 
-	expectedBits := []int{0, 3, 4, 7}
-	for bit := 0; bit < 8; bit++ {
+	expectedBits := []int{0, 15}
+	for bit := 0; bit < 13; bit++ {
 		if slices.Contains(expectedBits, bit) {
 			if !f.getBit(bit) {
 				t.Errorf("Expected bit %d to be set", bit)
@@ -69,15 +66,35 @@ func TestSetMicrochipFloor(t *testing.T) {
 }
 
 func TestSetGeneratorFloor(t *testing.T) {
+	ff := newFacilityFactory()
+	ff.addGenerator("plutonium", 1) // bit 6 || isotope id 0
+	ff.addGenerator("hydrogen", 1)  // bit 7  || isotope id 1
+	f := ff.build()
 
+	f.setGeneratorFloor(0, 0) // move plutonium to ground floor || bit 0
+	f.setGeneratorFloor(1, 3) // move hydrogen to top floor  || bit 13
+
+	expectedBits := []int{2, 14}
+	for bit := 0; bit < 13; bit++ {
+		if slices.Contains(expectedBits, bit) {
+			if !f.getBit(bit) {
+				t.Errorf("Expected bit %d to be set", bit)
+			}
+		}
+
+		if !slices.Contains(expectedBits, bit) {
+			if f.getBit(bit) {
+				t.Errorf("Expected bit %d to be unset", bit)
+			}
+		}
+	}
 }
 
 func TestGetSetFloorRoundTrips(t *testing.T) {
 	ff := newFacilityFactory()
 	f := ff.build()
 
-	// there are always 4 floors
-	for i := 0; i < 4; i++ {
+	for i := 0; i < f.floorCount; i++ {
 		f.setCurrentFloor(i)
 		if f.getCurrentFloor() != i {
 			t.Errorf("Expected current floor to be %d not %d.", i, f.getCurrentFloor())
@@ -118,10 +135,10 @@ func TestSetClearBitRoundTrips(t *testing.T) {
 
 func TestIsValidCorrectlyReturnsTrue(t *testing.T) {
 	ff := newFacilityFactory()
-	ff.addMicrochip("strontium", 3)
-	ff.addGenerator("strontium", 3)
-	ff.addMicrochip("plutonium", 2)
-	ff.addGenerator("plutonium", 2)
+	ff.addMicrochip("hydrogen", 1)
+	ff.addGenerator("hydrogen", 1)
+	ff.addMicrochip("lithium", 0)
+	ff.addGenerator("lithium", 2)
 	f := ff.build()
 
 	if !f.isValid() {
@@ -186,5 +203,27 @@ func TestListMovesReturnExpectedStates(t *testing.T) {
 	//   - strontium chip & generator up
 	for len(moves) != 5 {
 		t.Errorf("Expected 5 moves not %d", len(moves))
+	}
+}
+
+func TestStringReturnsExpectedState(t *testing.T) {
+	ff := newFacilityFactory()
+	ff.addMicrochip("strontium", 1)
+	ff.addGenerator("strontium", 1)
+	ff.addMicrochip("plutonium", 2)
+	ff.addGenerator("plutonium", 2)
+	ff.addMicrochip("hydrogen", 0)
+	ff.addGenerator("hydrogen", 3)
+	f := ff.build()
+
+	// strontium = 0, plutonium = 1 & hydrogen = 2
+	expect := `F4 .  .  .  .  .  2G 
+F3 .  1M .  .  1G .  
+F2 0M .  .  0G .  .  
+F1 .  .  2M .  .  .  `
+	actual := f.String()
+
+	if actual != expect {
+		t.Error("Actual output does not match expected.")
 	}
 }

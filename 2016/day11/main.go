@@ -45,7 +45,8 @@ func findMinSteps(f facility) int {
 			}
 		}
 
-		for _, move := range f.listMoves() {
+		moves := f.listMoves()
+		for _, move := range moves {
 			if !visited[move.state] {
 				nextVisited := map[uint64]bool{}
 				maps.Copy(nextVisited, visited)

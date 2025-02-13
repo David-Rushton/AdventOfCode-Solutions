@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
 
 // Facility stores the puzzle state within a unsigned 64 bit integer.  This allows for fast cloning
 // of state.  At the expense of added complexity.  The below describes how bits are encoded within
@@ -26,7 +30,8 @@ import "fmt"
 // The table below shows what information is contained within each bit.  The table assumes 6 isotopes.
 // Fewer isotopes would result in fewer bits required.
 //
-//                      1         2         3         4         5
+//	1         2         3         4         5
+//
 // pos	      0123456789012345678901234567890123456789012345678901
 // ---------------------------------------------------------------
 // floor      111111111111222222222222333333333333444444444444
@@ -225,4 +230,26 @@ func (f *facility) listMoves() []facility {
 	}
 
 	return result
+}
+
+func (f *facility) String() string {
+	floors := []string{"F1 ", "F2 ", "F3 ", "F4 "}
+
+	for i := 0; i < f.floorCount; i++ {
+		for j := 0; j < f.getBitsPerFloor(); j++ {
+			bit := (i * f.getBitsPerFloor()) + j
+			if f.getBit(bit) {
+				if j < f.isotopeCount {
+					floors[i] += fmt.Sprintf("%vM ", j)
+				} else {
+					floors[i] += fmt.Sprintf("%vG ", j-f.isotopeCount)
+				}
+			} else {
+				floors[i] += ".  "
+			}
+		}
+	}
+
+	slices.Reverse(floors)
+	return strings.Join(floors, "\n")
 }

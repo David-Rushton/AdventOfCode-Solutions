@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type facilityFactory struct {
 	isotopes   map[string]int
