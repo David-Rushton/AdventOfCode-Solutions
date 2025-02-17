@@ -201,7 +201,7 @@ func TestListMovesReturnExpectedStates(t *testing.T) {
 	//   - strontium chip & generator down
 	//   - strontium generator up
 	//   - strontium chip & generator up
-	for len(moves) != 5 {
+	if len(moves) != 5 {
 		t.Errorf("Expected 5 moves not %d", len(moves))
 	}
 }
@@ -225,5 +225,14 @@ F1 .  .  2M .  .  .  `
 
 	if actual != expect {
 		t.Error("Actual output does not match expected.")
+	}
+}
+
+func TestThis(t *testing.T) {
+	f := facility{4, 2, 546818}
+	moves := f.listMoves()
+
+	if len(moves) != 2 {
+		t.Errorf("Expected 2 moves.  Found: %v", len(moves))
 	}
 }
