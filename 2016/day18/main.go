@@ -22,16 +22,17 @@ func main() {
 	}
 
 	firstRow := aoc.GetInput(18)[0]
-	trapMap := getMap(firstRow, rows)
-	fmt.Println(trapMap)
-	safeTiles := countSafeTiles(trapMap)
+	trapMap, safeCount := getMap(firstRow, rows)
+	printTrapMap(trapMap)
 
 	fmt.Println()
-	fmt.Printf("Result: %d\n", safeTiles)
+	fmt.Printf("Result: %d\n", safeCount)
 }
 
-func getMap(firstRow string, rows int) string {
-	result := firstRow
+func getMap(firstRow string, rows int) (trapMap [][]rune, safeCount int) {
+	safeCount = len(firstRow) - len(strings.ReplaceAll(firstRow, ".", ""))
+	trapMap = make([][]rune, rows)
+	trapMap[0] = []rune(firstRow)
 
 	getTraps := func(position int, last []rune) (bool, bool, bool) {
 		result := []bool{false, false, false}
@@ -68,22 +69,30 @@ func getMap(firstRow string, rows int) string {
 
 	lastRow := []rune(firstRow)
 	for i := 1; i < rows; i++ {
-		nextRow := []rune{}
+		nextRow := make([]rune, len(lastRow))
 		for j := 0; j < len(lastRow); j++ {
 			if itsATrap(getTraps(j, lastRow)) {
-				nextRow = append(nextRow, '^')
+				nextRow[j] = '^'
 			} else {
-				nextRow = append(nextRow, '.')
+				nextRow[j] = '.'
+				safeCount++
 			}
 		}
 
-		result += "\n" + string(nextRow)
-		lastRow = nextRow
+		trapMap[i] = nextRow
+		lastRow = make([]rune, len(nextRow))
+		copy(lastRow, nextRow)
 	}
 
-	return result
+	return trapMap, safeCount
 }
 
-func countSafeTiles(trapMap string) any {
-	return len(trapMap) - len(strings.ReplaceAll(trapMap, ".", ""))
+func printTrapMap(trapMap [][]rune) {
+	for i := 0; i < len(trapMap); i++ {
+		fmt.Printf("% 5d ", i+1)
+		for j := 0; j < len(trapMap[i]); j++ {
+			fmt.Print(string(trapMap[i][j]))
+		}
+		fmt.Println()
+	}
 }
