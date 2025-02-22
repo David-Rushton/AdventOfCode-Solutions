@@ -184,16 +184,17 @@ func (f *facility) clearBit(pos int) {
 }
 
 func (f *facility) listMoves() []facility {
-	candidateBits := []int{}
 	result := []facility{}
 
 	for _, floorOffset := range []int{1, -1} {
+		candidateBits := []int{}
 		nextFloor := f.getCurrentFloor() + floorOffset
 		if nextFloor >= 0 && nextFloor < f.floorCount {
 			nextFloorOffset := floorOffset * f.getBitsPerFloor()
 
 			// get bits on floor
-			for i := f.getFloorBitOffset(f.getCurrentFloor()); i <= f.getFloorBitOffset(nextFloor); i++ {
+			currentFloorOffset := f.getFloorBitOffset(f.getCurrentFloor())
+			for i := currentFloorOffset; i < currentFloorOffset+f.getBitsPerFloor(); i++ {
 				if f.getBit(i) {
 					candidateBits = append(candidateBits, i)
 				}
@@ -210,6 +211,7 @@ func (f *facility) listMoves() []facility {
 						candidate.clearBit(j)
 						candidate.setBit(i + nextFloorOffset)
 						candidate.setBit(j + nextFloorOffset)
+						candidate.setCurrentFloor(nextFloor)
 						if candidate.isValid() {
 							result = append(result, candidate)
 						}
@@ -222,6 +224,7 @@ func (f *facility) listMoves() []facility {
 				candidate := f.copy()
 				candidate.clearBit(i)
 				candidate.setBit(i + nextFloorOffset)
+				candidate.setCurrentFloor(nextFloor)
 				if candidate.isValid() {
 					result = append(result, candidate)
 				}

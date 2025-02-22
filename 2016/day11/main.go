@@ -28,6 +28,7 @@ func findMinSteps(f facility) int {
 	var solve func(steps int, f facility, visited map[uint64]bool)
 	solve = func(steps int, f facility, visited map[uint64]bool) {
 		iterations++
+		fmt.Printf(" - Iterations %d\r", iterations)
 
 		if !f.isValid() {
 			return
@@ -45,12 +46,29 @@ func findMinSteps(f facility) int {
 			}
 		}
 
+		// if iterations > 1000 {
+		// 	return
+		// }
+
 		moves := f.listMoves()
 		for _, move := range moves {
 			if !visited[move.state] {
 				nextVisited := map[uint64]bool{}
 				maps.Copy(nextVisited, visited)
+				nextVisited[f.state] = true
 				nextVisited[move.state] = true
+
+				// fmt.Println("--b4-----------------------")
+				// fmt.Println(f)
+				// fmt.Println(f.String())
+				// fmt.Println("--after--------------------")
+				// fmt.Println(move)
+				// fmt.Println(move.String())
+				// fmt.Println("---------------------------")
+
+				// r := bufio.NewReader(os.Stdin)
+				// r.ReadRune()
+
 				solve(steps+1, move, nextVisited)
 			}
 		}
