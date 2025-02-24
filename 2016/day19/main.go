@@ -12,22 +12,16 @@ func main() {
 
 	var elfCount int = aoc.ToInt(aoc.GetInput(19)[0])
 
-	// Set up game.
-	var end = &elf{id: elfCount, value: 1}
-	var last = end
-	var current *elf
-	for i := elfCount - 1; i > 0; i-- {
-		current = &elf{
-			id:    i,
-			next:  last,
-			value: 1,
-		}
+	winnerStealNext := playStealFromNext(initialise(elfCount))
+	fmt.Println()
+	fmt.Printf("Steal from next won by Elf #%d\n\n", winnerStealNext.id)
 
-		last = current
-	}
-	end.next = current
+	winnerStealOpposite := playStealFromOpposite(initialise(elfCount), elfCount)
+	fmt.Println()
+	fmt.Printf("Steal from opposite won by Elf #%d\n", winnerStealOpposite.id)
+}
 
-	// Play the game.
+func playStealFromNext(current *elf) *elf {
 	for !current.isWinner() {
 		if aoc.VerboseMode {
 			fmt.Printf(" - Elf %d steals from Elf %d\n", current.id, current.next.id)
@@ -37,6 +31,43 @@ func main() {
 		current = current.next
 	}
 
-	fmt.Println()
-	fmt.Printf("Result: %d\n", current.id)
+	return current
+}
+
+func playStealFromOpposite(current *elf, elfCount int) *elf {
+
+	for !current.isWinner() {
+		stealFrom := current.skip(elfCount / 2)
+		stealFrom.previous.next = stealFrom.next
+		stealFrom.next.previous = stealFrom.previous
+
+		if aoc.VerboseMode {
+			fmt.Printf(" - Elf %d steals from Elf %d\n", current.id, stealFrom.id)
+		}
+
+		current = current.next
+
+		elfCount--
+	}
+
+	return current
+}
+
+func initialise(elfCount int) *elf {
+	var end = &elf{id: elfCount}
+	var last = end
+	var current *elf
+	for i := elfCount - 1; i > 0; i-- {
+		current = &elf{
+			id:   i,
+			next: last,
+		}
+		last.previous = current
+
+		last = current
+	}
+	current.previous = end
+	end.next = current
+
+	return current
 }

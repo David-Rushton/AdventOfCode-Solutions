@@ -1,13 +1,19 @@
 package main
 
 type elf struct {
-	id    int
-	next  *elf
-	value int
+	id       int
+	previous *elf
+	next     *elf
 }
 
-func (e *elf) setNext(next *elf) {
-	e.next = next
+func (e *elf) skip(n int) *elf {
+	result := e
+
+	for i := 0; i < n; i++ {
+		result = result.next
+	}
+
+	return result
 }
 
 func (e *elf) isWinner() bool {
