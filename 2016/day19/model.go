@@ -6,16 +6,17 @@ type elf struct {
 	next     *elf
 }
 
-func (e *elf) skip(n int) *elf {
-	result := e
-
-	for i := 0; i < n; i++ {
-		result = result.next
-	}
-
-	return result
-}
-
 func (e *elf) isWinner() bool {
 	return e.id == e.next.id
+}
+
+func (e *elf) skip(n int) *elf {
+	switch {
+	case n < 0:
+		return e.previous.skip(n + 1)
+	case n > 0:
+		return e.next.skip(n - 1)
+	default:
+		return e
+	}
 }
