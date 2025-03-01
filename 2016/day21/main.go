@@ -15,9 +15,11 @@ func main() {
 	password := getPassword(aoc.TestMode)
 	instructions := aoc.GetInput(21)
 	scrambled := scramble(password, instructions)
+	unscrambled := unscramble("fbgdceah", instructions)
 
 	fmt.Println()
 	fmt.Printf("Scrambled password: %v\n", scrambled)
+	fmt.Printf("Unscrambled password: %v\n", unscrambled)
 }
 
 func scramble(s string, instructions []string) string {
@@ -49,10 +51,42 @@ func scramble(s string, instructions []string) string {
 			result = movePosition(result, aoc.ToInt(elements[2]), aoc.ToInt(elements[5]))
 		}
 
-		fmt.Printf(" - %v || %v\n", string(result), instructions[i])
+		if aoc.VerboseMode {
+			fmt.Printf(" - %v || %v\n", string(result), instructions[i])
+		}
 	}
 
 	return string(result)
+}
+
+func unscramble(s string, instructions []string) string {
+	// Find all possible unscrambled passwords,
+	var candidates = []string{}
+	var generateCandidates func(string, []rune)
+	generateCandidates = func(s string, remaining []rune) {
+		if len(remaining) == 0 {
+			candidates = append(candidates, s)
+			return
+		}
+
+		for i := range remaining {
+			var nextRemaining = make([]rune, len(remaining))
+			copy(nextRemaining, remaining)
+			generateCandidates(
+				s+string(remaining[i]),
+				append(nextRemaining[0:i], nextRemaining[i+1:]...))
+		}
+	}
+	generateCandidates("", []rune(s))
+
+	// Scramble each until we find a match.
+	for i := range candidates {
+		if scrambled := scramble(candidates[i], instructions); scrambled == s {
+			return candidates[i]
+		}
+	}
+
+	panic("could not unscramble password :(")
 }
 
 func swapPosition(r []rune, x, y int) []rune {
