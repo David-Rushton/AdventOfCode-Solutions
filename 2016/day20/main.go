@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"slices"
 	"strings"
 
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2016/internal/aoc"
 )
 
+// > 103
 func main() {
 	fmt.Println("--- Day 20: Firewall Rules ---")
 	fmt.Println()
@@ -26,7 +28,7 @@ func main() {
 	}
 
 	// find all open addresses.
-	var openAddresses = 10 //math.MaxInt32
+	var openAddresses = math.MaxUint32 + 1
 	for _, blocked := range blockedRanges {
 		openAddresses -= blocked.count()
 	}
@@ -59,7 +61,7 @@ func compactIpRanges(ranges []ipRange) []ipRange {
 	var result = []ipRange{}
 	var from, until int
 	for i, blocked := range ranges {
-		extendsCurrent := i == 0 || (blocked.from >= ranges[i-1].from && blocked.from <= ranges[i-1].until)
+		extendsCurrent := i == 0 || (blocked.from >= from && blocked.from <= until)
 		isLast := i == len(ranges)-1
 
 		// extend current.
