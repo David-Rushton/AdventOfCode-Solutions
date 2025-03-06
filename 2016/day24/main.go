@@ -32,13 +32,13 @@ func main() {
 	fmt.Println()
 
 	steps, locations := parse(aoc.GetInput(24))
-	stepCount := findShortestRoute(steps, locations)
+	stepCount := findShortestRoute(steps, locations, aoc.Star == aoc.StarTwo)
 
 	fmt.Println()
 	fmt.Printf("Result: %d\n", stepCount)
 }
 
-func findShortestRoute(steps map[point]bool, locations map[int]point) int {
+func findShortestRoute(steps map[point]bool, locations map[int]point, returnHome bool) int {
 	// find all locations to visit.
 	var toVisit = []int{}
 	for k := range locations {
@@ -51,6 +51,9 @@ func findShortestRoute(steps map[point]bool, locations map[int]point) int {
 	var findRoutes func(visited []int)
 	findRoutes = func(visited []int) {
 		if len(visited) == len(toVisit) {
+			if returnHome {
+				visited = append(visited, 0)
+			}
 			routes = append(routes, visited)
 			return
 		}
@@ -70,46 +73,36 @@ func findShortestRoute(steps map[point]bool, locations map[int]point) int {
 	// Find, and cache, steps between locations.
 	var stepCountCache = map[routeKey]int{}
 	getStepCount := func(from, to point) int {
-		var minSteps = math.MaxInt
 		if _, exists := stepCountCache[routeKey{from, to}]; !exists {
-			type state struct {
-				from    point
-				visited []point
-			}
-
-			var queue = []state{{
-				from:    from,
-				visited: []point{},
-			}}
-			for len(queue) > 0 {
-				fmt.Printf(" - Queue size: % 5d\r", len(queue))
-
-				current := queue[0]
-				queue = queue[1:]
-
-				if len(current.visited) > minSteps {
-					continue
-				}
-
-				if current.from == to {
-					if len(current.visited) < minSteps {
-						minSteps = len(current.visited)
-					}
-
-					continue
-				}
-
-				for _, neighbour := range current.from.getNeighbours() {
-					if steps[neighbour] && !slices.Contains(current.visited, neighbour) {
-						var newVisited = make([]point, len(current.visited))
-						copy(newVisited, current.visited)
-						newVisited = append(newVisited, current.from)
-						queue = append(queue, state{from: neighbour, visited: newVisited})
-					}
+			// Dijkstra's_algorithm
+			// https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+			var unvisited = map[point]int{}
+			for point := range steps {
+				unvisited[point] = math.MaxInt
+				if point == from {
+					unvisited[point] = 0
 				}
 			}
 
-			stepCountCache[routeKey{from, to}] = minSteps
+			for {
+				current, stepCount := getLowestValue(unvisited)
+				stepCount++
+
+				if current == to {
+					stepCountCache[routeKey{from, to}] = unvisited[to]
+					break
+				}
+
+				for _, neighbour := range current.getNeighbours() {
+					if unvisitedSteps, exists := unvisited[neighbour]; exists {
+						if stepCount < unvisitedSteps {
+							unvisited[neighbour] = stepCount
+						}
+					}
+				}
+
+				delete(unvisited, current)
+			}
 		}
 
 		return stepCountCache[routeKey{from, to}]
@@ -118,8 +111,6 @@ func findShortestRoute(steps map[point]bool, locations map[int]point) int {
 	// find shortest route
 	var shortestRoute = math.MaxInt
 	for i := range routes {
-		fmt.Printf(" - Testing route % 4d of % 4d: %v \r", i+1, len(routes), routes[i])
-
 		var currentRoute int
 		for j := 0; j < len(routes[i])-1; j++ {
 			currentRoute += getStepCount(locations[routes[i][j]], locations[routes[i][j+1]])
@@ -135,6 +126,20 @@ func findShortestRoute(steps map[point]bool, locations map[int]point) int {
 	}
 
 	return shortestRoute
+}
+
+func getLowestValue(m map[point]int) (point, int) {
+	var smallestK point
+	var smallestV = math.MaxInt
+
+	for k, v := range m {
+		if v < smallestV {
+			smallestV = v
+			smallestK = k
+		}
+	}
+
+	return smallestK, smallestV
 }
 
 func parse(input []string) (steps map[point]bool, locations map[int]point) {
