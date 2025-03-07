@@ -1,6 +1,7 @@
 package aoc
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -37,9 +38,17 @@ func init() {
 }
 
 func GetInput(day int) []string {
+	// Normally run from root, but test code etc can run in local folder.
 	path := fmt.Sprintf("./day%02d/input.txt", day)
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		path = "./input.txt"
+	}
+
 	if TestMode {
 		path = fmt.Sprintf("./day%02d/input.test.txt", day)
+		if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+			path = "./input.test.txt"
+		}
 	}
 
 	data, err := os.ReadFile(path)

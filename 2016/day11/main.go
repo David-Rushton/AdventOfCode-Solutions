@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"maps"
 	"math"
 	"slices"
 	"strings"
@@ -22,63 +21,62 @@ func main() {
 }
 
 func findMinSteps(f facility) int {
-	minSteps := math.MaxInt
+	var visited = map[uint64]bool{}
+	var unvisited = map[facility]int{
+		f: 0,
+	}
 
-	var iterations int
-	var solve func(steps int, f facility, visited map[uint64]bool)
-	solve = func(steps int, f facility, visited map[uint64]bool) {
-		iterations++
-		fmt.Printf(" - Iterations %d\r", iterations)
+	var maxCandidates int
 
-		if !f.isValid() {
-			return
+	for {
+		// fmt.Printf(" - visited %v\r", len(visited))
+
+		current, stepCount := getSmallest(unvisited)
+
+		if current.isWin() {
+			return stepCount
 		}
 
-		if steps > minSteps {
-			return
+		stepCount++
+
+		// append any neighbours we haven't seen before.
+		candidates := current.listMoves()
+		if len(candidates) > maxCandidates {
+			maxCandidates = len(candidates)
+			fmt.Printf(" - New max candidates found %v\n", maxCandidates)
 		}
 
-		if f.isWin() {
-			if steps < minSteps {
-				minSteps = steps
-				fmt.Printf(" - Found new best of %d steps\n", steps)
-				return
+		for _, candidate := range candidates {
+			if _, exists := unvisited[candidate]; !exists {
+				if !visited[candidate.state] {
+					unvisited[candidate] = math.MaxInt
+				}
+			}
+
+			if unvisitedStepCount, exists := unvisited[candidate]; exists {
+				if stepCount < unvisitedStepCount {
+					unvisited[candidate] = stepCount
+				}
 			}
 		}
 
-		// if iterations > 1000 {
-		// 	return
-		// }
+		delete(unvisited, current)
+		visited[current.state] = true
+	}
+}
 
-		moves := f.listMoves()
-		for _, move := range moves {
-			if !visited[move.state] {
-				nextVisited := map[uint64]bool{}
-				maps.Copy(nextVisited, visited)
-				nextVisited[f.state] = true
-				nextVisited[move.state] = true
+func getSmallest(m map[facility]int) (facility, int) {
+	var smallestK facility
+	var smallestV int = math.MaxInt
 
-				// fmt.Println("--b4-----------------------")
-				// fmt.Println(f)
-				// fmt.Println(f.String())
-				// fmt.Println("--after--------------------")
-				// fmt.Println(move)
-				// fmt.Println(move.String())
-				// fmt.Println("---------------------------")
-
-				// r := bufio.NewReader(os.Stdin)
-				// r.ReadRune()
-
-				solve(steps+1, move, nextVisited)
-			}
+	for k, v := range m {
+		if v < smallestV {
+			smallestK = k
+			smallestV = v
 		}
 	}
 
-	solve(0, f, map[uint64]bool{})
-
-	fmt.Printf(" - Total iterations %d\n", iterations)
-
-	return minSteps
+	return smallestK, smallestV
 }
 
 func parse(input []string) facility {
