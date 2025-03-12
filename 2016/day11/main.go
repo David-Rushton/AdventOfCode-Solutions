@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("--- Day 11: Radioisotope Thermoelectric Generators ---")
 	fmt.Println()
 
-	facility := parse(aoc.GetInput(11))
+	facility := parse(aoc.GetInput(11), aoc.Star == aoc.StarTwo)
 	result := findMinSteps(facility)
 
 	fmt.Println()
@@ -30,6 +30,10 @@ func findMinSteps(f facility) int {
 
 	for {
 		// fmt.Printf(" - visited %v\r", len(visited))
+
+		if len(unvisited) == 0 {
+			panic("Unable to find solution")
+		}
 
 		current, stepCount := getSmallest(unvisited)
 
@@ -79,7 +83,7 @@ func getSmallest(m map[facility]int) (facility, int) {
 	return smallestK, smallestV
 }
 
-func parse(input []string) facility {
+func parse(input []string, addMissingElements bool) facility {
 	floorMap := map[string]int{
 		"first":  0,
 		"second": 1,
@@ -97,6 +101,13 @@ func parse(input []string) facility {
 	}
 
 	facilityFactory := newFacilityFactory()
+
+	if addMissingElements {
+		facilityFactory.addMicrochip("elerium", 0)
+		facilityFactory.addGenerator("elerium", 0)
+		facilityFactory.addMicrochip("dilithium", 0)
+		facilityFactory.addGenerator("dilithium", 0)
+	}
 
 	for i := range input {
 		elements := strings.Split(strings.ReplaceAll(strings.ReplaceAll(input[i], ",", ""), ".", ""), " ")
