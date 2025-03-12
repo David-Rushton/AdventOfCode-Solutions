@@ -21,6 +21,7 @@ func main() {
 }
 
 func findMinSteps(f facility) int {
+	var stepIndex = map[int]int{}
 	var visited = map[uint64]bool{}
 	var unvisited = map[facility]int{
 		f: 0,
@@ -35,7 +36,7 @@ func findMinSteps(f facility) int {
 			panic("Unable to find solution")
 		}
 
-		current, stepCount := getSmallest(unvisited)
+		current, stepCount := getSmallest(unvisited, stepIndex)
 
 		if current.isWin() {
 			return stepCount
@@ -51,29 +52,44 @@ func findMinSteps(f facility) int {
 		}
 
 		for _, candidate := range candidates {
-			if _, exists := unvisited[candidate]; !exists {
-				if !visited[candidate.state] {
-					unvisited[candidate] = math.MaxInt
-				}
+			if visited[candidate.state] {
+				continue
 			}
 
 			if unvisitedStepCount, exists := unvisited[candidate]; exists {
 				if stepCount < unvisitedStepCount {
 					unvisited[candidate] = stepCount
+					stepIndex[stepCount]++
 				}
+			} else {
+				unvisited[candidate] = stepCount
+				stepIndex[stepCount]++
 			}
+
 		}
 
+		stepIndex[stepCount-1]--
 		delete(unvisited, current)
 		visited[current.state] = true
 	}
 }
 
-func getSmallest(m map[facility]int) (facility, int) {
+func getSmallest(m map[facility]int, stepIndex map[int]int) (facility, int) {
 	var smallestK facility
 	var smallestV int = math.MaxInt
 
+	var i int
+	for i = 1; i < 1_000; i++ {
+		if stepIndex[i] > 0 {
+			break
+		}
+	}
+
 	for k, v := range m {
+		if i < 1_000 && v == i {
+			return k, v
+		}
+
 		if v < smallestV {
 			smallestK = k
 			smallestV = v
