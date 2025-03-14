@@ -55,12 +55,13 @@ func getMinSteps(nodeIndex map[point]node) int {
 		cluster map[point]node
 		payload point
 		steps   int
+		visited map[int64]bool
 	}
 
-	var queue = []state{{nodeIndex, target, 0}}
+	var queue = []state{{nodeIndex, target, 0, map[int64]bool{}}}
 	var destination = point{x: 0, y: 0}
 	var minSteps = math.MaxInt
-	var visited = map[int64]bool{}
+	// var visited =
 
 	for len(queue) > 0 {
 		current := queue[0]
@@ -96,13 +97,16 @@ func getMinSteps(nodeIndex map[point]node) int {
 				newPayload = to.address
 			}
 
-			if !visited[connection.hash] {
-				// visited[connection.hash] = true
+			if !current.visited[connection.hash] {
+				var newVisited = map[int64]bool{}
+				maps.Copy(newVisited, current.visited)
+				newVisited[connection.hash] = true
 
 				queue = append(queue, state{
 					cluster: newCluster,
 					payload: newPayload,
-					steps:   current.steps + 1})
+					steps:   current.steps + 1,
+					visited: newVisited})
 			}
 
 		}
