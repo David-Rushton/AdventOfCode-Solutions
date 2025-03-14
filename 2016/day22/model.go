@@ -1,15 +1,8 @@
 package main
 
-import "math"
-
 type point struct {
 	x int
 	y int
-}
-
-func (p *point) isConnected(other point) bool {
-	return (p.x == other.x && math.Abs(float64(p.y-other.y)) == 1) ||
-		(p.y == other.y && math.Abs(float64(p.x-other.x)) == 1)
 }
 
 type node struct {
