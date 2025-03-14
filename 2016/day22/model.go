@@ -20,9 +20,10 @@ type node struct {
 }
 
 type connectedNodes struct {
-	from node
-	to   node
-	hash int64
+	from  node
+	to    node
+	hash1 int64
+	hash2 int64
 }
 
 func (cn *connectedNodes) move() (left, right node) {

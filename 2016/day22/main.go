@@ -97,10 +97,11 @@ func getMinSteps(nodeIndex map[point]node) int {
 				newPayload = to.address
 			}
 
-			if !current.visited[connection.hash] {
+			if !current.visited[connection.hash1] && !current.visited[connection.hash2] {
 				var newVisited = map[int64]bool{}
 				maps.Copy(newVisited, current.visited)
-				newVisited[connection.hash] = true
+				newVisited[connection.hash1] = true
+				newVisited[connection.hash2] = true
 
 				queue = append(queue, state{
 					cluster: newCluster,
@@ -128,7 +129,8 @@ func getViablePairs(nodes map[point]node, payload point) []connectedNodes {
 		for _, offset := range offsets {
 			if right, exists := nodes[offset]; exists {
 				if left.used > 0 && left.used <= right.available {
-					result = append(result, connectedNodes{left, right, getConnectedHash(left, right)})
+					hash1, hash2 := getConnectedHash(left, right)
+					result = append(result, connectedNodes{left, right, hash1, hash2})
 				}
 			}
 		}
@@ -137,12 +139,16 @@ func getViablePairs(nodes map[point]node, payload point) []connectedNodes {
 	return result
 }
 
-func getConnectedHash(left, right node) int64 {
+func getConnectedHash(left, right node) (int64, int64) {
 	return int64(left.address.x*1e11) +
-		int64(left.address.y*1e9) +
-		int64(right.address.x*1e7) +
-		int64(right.address.y*1e5) +
-		int64(left.used)
+			int64(left.address.y*1e9) +
+			int64(right.address.x*1e7) +
+			int64(right.address.y*1e5) +
+			int64(left.used), int64(right.address.x*1e11) +
+			int64(right.address.y*1e9) +
+			int64(left.address.x*1e7) +
+			int64(left.address.y*1e5) +
+			int64(left.used)
 }
 
 func parse(input []string) (nodes []node, nodeIndex map[point]node) {
