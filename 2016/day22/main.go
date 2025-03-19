@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"maps"
-	"math"
 	"strings"
 
 	"github.com/David-Rushton/AdventOfCode-Solutions/tree/main/2016/internal/aoc"
@@ -14,15 +12,50 @@ func main() {
 	fmt.Println()
 
 	nodes, nodeIndex := parse(aoc.GetInput(22))
-	viablePairs := countViablePairs(nodes, nodeIndex)
-	minSteps := getMinSteps(nodeIndex)
+	viablePairs := countViablePairs(nodes)
+	printMap(nodeIndex)
 
 	fmt.Println()
 	fmt.Printf("Viable Pairs: %d\n", viablePairs)
-	fmt.Printf("Minimum Steps: %d\n", minSteps)
 }
 
-func countViablePairs(nodes []node, nodeIndex map[point]node) int {
+// Manually count required steps from map.
+// No really.
+func printMap(nodeIndex map[point]node) {
+	target := point{x: 29, y: 0}
+
+	for y := range 35 {
+		for x := range 35 {
+			if node, exists := nodeIndex[point{x, y}]; exists {
+				if node.address == target {
+					fmt.Print("T")
+					continue
+				}
+
+				if node.used > 100 {
+					fmt.Print("#")
+					continue
+				}
+
+				if node.used == 0 {
+					fmt.Print("_")
+					continue
+				}
+
+				if node.used > 0 {
+					fmt.Print(".")
+					continue
+				}
+			} else {
+				fmt.Print(" ")
+			}
+		}
+
+		fmt.Println()
+	}
+}
+
+func countViablePairs(nodes []node) int {
 	var result int
 
 	for i := range nodes {
@@ -36,119 +69,6 @@ func countViablePairs(nodes []node, nodeIndex map[point]node) int {
 	}
 
 	return result
-}
-
-func getMinSteps(nodeIndex map[point]node) int {
-	// Target is cell with y of 0 and highest x.
-	var target point
-	for i := 0; ; i++ {
-		if node, exists := nodeIndex[point{x: i, y: 0}]; exists {
-			target = node.address
-			continue
-		}
-
-		break
-	}
-
-	// Solve.
-	type state struct {
-		cluster map[point]node
-		payload point
-		steps   int
-		visited map[int64]bool
-	}
-
-	var queue = []state{{nodeIndex, target, 0, map[int64]bool{}}}
-	var destination = point{x: 0, y: 0}
-	var minSteps = math.MaxInt
-	// var visited =
-
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-
-		fmt.Printf(" - Queue: %v\r", len(queue))
-
-		// Win.
-		if current.payload == destination {
-			if current.steps < minSteps {
-				minSteps = current.steps
-				fmt.Printf(" - New best found: %v\n", minSteps)
-				continue
-			}
-		}
-
-		// Lose.
-		if current.steps > minSteps {
-			continue
-		}
-
-		// Play on.
-		connections := getViablePairs(current.cluster, current.payload)
-		for _, connection := range connections {
-			var newCluster = map[point]node{}
-			from, to := connection.move()
-			maps.Copy(newCluster, current.cluster)
-			newCluster[from.address] = from
-			newCluster[to.address] = to
-
-			newPayload := current.payload
-			if newPayload == from.address {
-				newPayload = to.address
-			}
-
-			if !current.visited[connection.hash1] && !current.visited[connection.hash2] {
-				var newVisited = map[int64]bool{}
-				maps.Copy(newVisited, current.visited)
-				newVisited[connection.hash1] = true
-				newVisited[connection.hash2] = true
-
-				queue = append(queue, state{
-					cluster: newCluster,
-					payload: newPayload,
-					steps:   current.steps + 1,
-					visited: newVisited})
-			}
-
-		}
-	}
-
-	return minSteps
-}
-
-func getViablePairs(nodes map[point]node, payload point) []connectedNodes {
-	var result []connectedNodes
-
-	for _, left := range nodes {
-		offsets := []point{
-			{x: left.address.x + 1, y: left.address.y},
-			{x: left.address.x - 1, y: left.address.y},
-			{x: left.address.x, y: left.address.y + 1},
-			{x: left.address.x, y: left.address.y - 1},
-		}
-		for _, offset := range offsets {
-			if right, exists := nodes[offset]; exists {
-				if left.used > 0 && left.used <= right.available {
-					hash1, hash2 := getConnectedHash(left, right)
-					result = append(result, connectedNodes{left, right, hash1, hash2})
-				}
-			}
-		}
-	}
-
-	return result
-}
-
-func getConnectedHash(left, right node) (int64, int64) {
-	return int64(left.address.x*1e11) +
-			int64(left.address.y*1e9) +
-			int64(right.address.x*1e7) +
-			int64(right.address.y*1e5) +
-			int64(left.used), int64(right.address.x*1e11) +
-			int64(right.address.y*1e9) +
-			int64(left.address.x*1e7) +
-			int64(left.address.y*1e5) +
-			int64(left.used)
 }
 
 func parse(input []string) (nodes []node, nodeIndex map[point]node) {
