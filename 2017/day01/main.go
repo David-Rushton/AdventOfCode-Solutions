@@ -10,21 +10,41 @@ func main() {
 	fmt.Println("--- Day 1: Inverse Captcha ---")
 	fmt.Println()
 
-	var result int
+	var result1 int
+	var result2 int
 	for _, captcha := range parse(aoc.GetInput(1)) {
-		result = solve(captcha)
-		fmt.Printf(" - %v == %d\n", captcha, result)
+		result1 = solve1(captcha)
+		fmt.Printf(" - 1: %v == %d \n", captcha, result1)
+
+		result2 = solve2(captcha[0 : len(captcha)-1])
+		fmt.Printf(" - 2: %v == %d \n", captcha, result2)
+
+		fmt.Println()
 	}
 
 	fmt.Println()
-	fmt.Printf("Result: %d\n", result)
+	fmt.Printf("Result 1: %d\n", result1)
+	fmt.Printf("Result 2: %d\n", result2)
 }
 
-func solve(captcha []int) int {
+func solve1(captcha []int) int {
 	var result int
 
 	for i := 1; i < len(captcha); i++ {
 		if captcha[i] == captcha[i-1] {
+			result += captcha[i]
+		}
+	}
+
+	return result
+}
+
+func solve2(captcha []int) int {
+	var result int
+
+	for i := range captcha {
+		j := (i + len(captcha)/2) % len(captcha)
+		if captcha[i] == captcha[j] {
 			result += captcha[i]
 		}
 	}

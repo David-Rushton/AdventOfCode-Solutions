@@ -19,8 +19,13 @@ func main() {
 
 	var result int
 	for _, target := range targets {
-		result = countStepsTo(target)
-		fmt.Printf(" - Steps to %d == %d\n", target, result)
+		if aoc.Star == aoc.StarOne {
+			result = findDistance(target)
+			fmt.Printf(" - Steps to %d == %d\n", target, result)
+		} else {
+			result = countStepsTo(target)
+			fmt.Printf(" - Steps to %d == %d\n", target, result)
+		}
 	}
 
 	fmt.Println()
@@ -28,7 +33,6 @@ func main() {
 }
 
 func countStepsTo(target int) int {
-	var steps = 0
 	var grid = map[point]int{{x: 0, y: 0}: 1}
 
 	const east int = 0
@@ -94,13 +98,68 @@ func countStepsTo(target int) int {
 			}
 		}
 
-		// Increment steps
-		steps++
-
+		// Check for exit
 		grid[point{x, y}] = value
 		if value > target {
-			return steps
+			printGrid(top, bottom, left, right, grid)
+			return value
 		}
+	}
+}
+
+func printGrid(top, bottom, left, right int, grid map[point]int) {
+	for y := top; y >= bottom; y-- {
+		for x := left; x <= right; x++ {
+			if value, exists := grid[point{x, y}]; exists {
+				fmt.Printf("% 8d", value)
+			} else {
+				fmt.Print("        ")
+			}
+		}
+		fmt.Println()
+	}
+	fmt.Println()
+}
+
+func findDistance(target int) int {
+	var squareSide = 1
+	var ceiling = 1
+	var ySteps = 0
+	for {
+
+		if target <= ceiling {
+			if target == ceiling {
+				return ySteps * 2
+			}
+
+			var current = ceiling
+			var xSteps = ySteps
+			var descending = true
+			var limit = ySteps
+			for {
+				if current == target {
+					return ySteps + xSteps
+				}
+
+				if descending {
+					xSteps--
+					if xSteps <= 0 {
+						descending = false
+					}
+				} else {
+					xSteps++
+					if xSteps >= limit {
+						descending = true
+					}
+				}
+
+				current--
+			}
+		}
+
+		ySteps++
+		squareSide += 2
+		ceiling += (squareSide * 4) - 4
 	}
 }
 
