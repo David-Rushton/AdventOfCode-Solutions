@@ -36,20 +36,12 @@ func main() {
 }
 
 func findUnbalanced(root *program) {
-	var printPrograms func(p *program)
-	printPrograms = func(p *program) {
-		fmt.Printf("- %v %d\n", p.name, p.getTotalWeight())
-
-		for _, child := range p.children {
-			printPrograms(child)
-		}
-	}
-
 	var solve func(p *program) *program
 	solve = func(p *program) *program {
 		var weights = map[int]int{}
 		var byWeights = map[int]*program{}
 		var outlier *program
+		var targetWeight int
 
 		// Find outlier.
 		for _, child := range p.children {
@@ -61,7 +53,8 @@ func findUnbalanced(root *program) {
 		for weight, count := range weights {
 			if count == 1 {
 				outlier = byWeights[weight]
-				break
+			} else {
+				targetWeight = weight
 			}
 		}
 
@@ -69,12 +62,12 @@ func findUnbalanced(root *program) {
 			return nil
 		}
 
-		// If outlier children are balanced investigate them.
-		// If not outlier is the problem node.
-
 		subOutlier := solve(outlier)
 		if subOutlier == nil {
-			fmt.Println(outlier.name)
+			fmt.Printf(
+				" - Weight change required for %v to %d\n",
+				outlier.name,
+				outlier.weight+targetWeight-outlier.getTotalWeight())
 		}
 
 		return outlier
