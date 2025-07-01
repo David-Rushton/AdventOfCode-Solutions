@@ -11,12 +11,18 @@ func main() {
 	fmt.Println("--- Day 15: Duelling Generators ---")
 	fmt.Println()
 
+	var strictMode = aoc.Star == aoc.StarTwo
 	var seedA, seedB = getSeeds(aoc.GetInput(15))
-	var generatorA = newGenerator(seedA, 16807)
-	var generatorB = newGenerator(seedB, 48271)
+	var generatorA = newGenerator(seedA, 16807, 4, strictMode)
+	var generatorB = newGenerator(seedB, 48271, 8, strictMode)
 	var matches = 0
 
-	for i := range 40000000 {
+	var sampleSize = 40_000_000
+	if strictMode {
+		sampleSize = 5_000_000
+	}
+
+	for i := range sampleSize {
 		var valueA = generatorA()
 		var binaryA = truncate(toBinary(valueA), 16)
 		var valueB = generatorB()
@@ -47,14 +53,19 @@ func truncate(s string, length int) string {
 	return s
 }
 
-func newGenerator(seed, factor int64) func() int64 {
+func newGenerator(seed, factor, multiple int64, strictMode bool) func() int64 {
 	const product int64 = 2147483647
 	var last = seed
 
 	return func() int64 {
-		var result = (last * factor) % product
-		last = result
-		return result
+		for {
+			var result = (last * factor) % product
+			last = result
+
+			if !strictMode || result%multiple == 0 {
+				return result
+			}
+		}
 	}
 }
 
