@@ -37,11 +37,31 @@ func (v value) isValid() bool {
 	return firstHalf != secondHalf
 }
 
+func (v value) isValidV2() bool {
+	repeats := func(s string) bool {
+		if len(v.txt)%len(s) == 0 && len(v.txt)/len(s) > 1 {
+			repeated := strings.Repeat(s, len(v.txt)/len(s))
+			return v.txt == repeated
+		}
+
+		return false
+	}
+
+	for i := range len(v.txt) {
+		if repeats(v.txt[0 : i+1]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func main() {
 	fmt.Println("--- Day 2: Gift Shop ---")
 	fmt.Println()
 
-	result := 0
+	result1 := 0
+	result2 := 0
 	idRanges := parse(aoc.InputRaw)
 
 	for _, currentRange := range idRanges {
@@ -49,13 +69,13 @@ func main() {
 
 		for current.num <= currentRange.until.num {
 			if !current.isValid() {
-				fmt.Printf(
-					" - invalid id %s in range %s - %s\n",
-					current.txt,
-					currentRange.from.txt,
-					currentRange.until.txt)
+				result1 += current.num
+			}
 
-				result += current.num
+			if !current.isValidV2() {
+				fmt.Printf(" - invalid id %s\n", current.txt)
+
+				result2 += current.num
 			}
 
 			current = current.next()
@@ -63,7 +83,8 @@ func main() {
 	}
 
 	fmt.Println()
-	fmt.Printf("Result: %d\n", result)
+	fmt.Printf("Star 1: %d\n", result1)
+	fmt.Printf("Star 2: %d\n", result2)
 }
 
 func parse(input string) []idRange {
