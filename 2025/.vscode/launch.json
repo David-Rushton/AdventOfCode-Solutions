@@ -12,12 +12,24 @@
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}\\cmd\\day01",
             "args": [
-                "-t",
-                "-2",
-                "-v"
+                "-t"
             ],
             "env": {
                 "aoc_day": "1"
+            }
+        },
+        {
+            "name": "D2",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day02",
+            "args": [
+                "-t"
+            ],
+            "env": {
+                "aoc_day": "2"
             }
         }
     ]
