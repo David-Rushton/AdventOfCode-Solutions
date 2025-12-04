@@ -9,8 +9,9 @@ import (
 type cell rune
 
 const (
-	cellEmpty cell = '.'
-	cellRoll  cell = '@'
+	cellEmpty  cell = '.'
+	cellRoll   cell = '@'
+	cellRemove cell = 'x'
 )
 
 type grid map[point]cell
@@ -51,7 +52,7 @@ func main() {
 	fmt.Println("--- Day 4: Printing Department ---")
 	fmt.Println()
 
-	var rolls int
+	// var rolls int
 	var grid = make(grid)
 
 	for y, line := range aoc.Input {
@@ -61,19 +62,49 @@ func main() {
 		}
 	}
 
-	for p, c := range grid {
-		var rollsFound int
-		for _, neighbours := range grid.getNeighbours(p) {
-			if grid[neighbours] == cellRoll {
-				rollsFound++
+	var rows = len(aoc.Input)
+	var cols = len(aoc.Input[0])
+	var rollsRemoved int
+
+	for {
+		var accessibleRolls = make(map[point]bool)
+
+		for p, c := range grid {
+			var rollsFound int
+			for _, neighbour := range grid.getNeighbours(p) {
+				if grid[neighbour] == cellRoll {
+					rollsFound++
+				}
+			}
+
+			if rollsFound < 4 && c == cellRoll {
+				accessibleRolls[p] = true
 			}
 		}
 
-		if rollsFound < 4 && c == cellRoll {
-			rolls++
+		if len(accessibleRolls) == 0 {
+			break
 		}
+		rollsRemoved += len(accessibleRolls)
+
+		fmt.Printf(" - Removed %d rolls of paper\n", len(accessibleRolls))
+
+		for y := range rows {
+			for x := range cols {
+				point := point{x, y}
+
+				if accessibleRolls[point] {
+					grid[point] = cellEmpty
+					fmt.Print(string(cellRemove))
+				} else {
+					fmt.Print(string(grid[point]))
+				}
+			}
+			fmt.Println()
+		}
+		fmt.Println()
 	}
 
 	fmt.Println()
-	fmt.Printf("Accessible Rolls: %d\n", rolls)
+	fmt.Printf("Rolls Removed: %d\n", rollsRemoved)
 }
