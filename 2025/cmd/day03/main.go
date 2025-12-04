@@ -8,13 +8,12 @@ import (
 )
 
 func main() {
-	switch {
-	case aoc.Star == aoc.StarOne:
+	switch aoc.Star {
+	case aoc.StarOne:
 		v1()
 	default:
 		v2()
 	}
-
 }
 
 func v1() {
@@ -45,9 +44,6 @@ func v1() {
 	fmt.Printf("Joltage: %d\n", totalJoltage)
 }
 
-// < 162296191353017
-//
-//	172601598658203
 func v2() {
 	fmt.Println("--- Day 3: Lobby --")
 	fmt.Println()
