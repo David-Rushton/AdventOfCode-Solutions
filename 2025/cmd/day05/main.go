@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -15,6 +16,33 @@ type idRange struct {
 
 func (r idRange) includes(i int64) bool {
 	return i >= r.from && i <= r.until
+}
+
+func (r idRange) overlaps(other idRange) bool {
+	if r.from >= other.from && r.from <= other.until {
+		return true
+	}
+
+	if r.until >= other.from && r.until <= other.until {
+		return true
+	}
+
+	if r.from <= other.from && r.until >= other.until {
+		return true
+	}
+
+	return false
+}
+
+func (r idRange) merge(other idRange) idRange {
+	return idRange{
+		from:  min(r.from, other.from),
+		until: max(r.until, other.until),
+	}
+}
+
+func (r idRange) String() string {
+	return fmt.Sprintf("% 15d -> % 15d", r.from, r.until)
 }
 
 func main() {
@@ -44,11 +72,31 @@ func main() {
 		}
 	}
 
+	// Sort ranges.
+	slices.SortFunc(idRanges, func(a, b idRange) int {
+		fromCmp := int(a.from - b.from)
+		if fromCmp != 0 {
+			return fromCmp
+		}
+		return int(a.until - b.until)
+	})
+
+	// Merge overlapping ranges.
+	mergedIdRanges := []idRange{idRanges[0]}
+	for _, idRange := range idRanges {
+		lastIdx := len(mergedIdRanges) - 1
+		if idRange.overlaps(mergedIdRanges[lastIdx]) {
+			mergedIdRanges[lastIdx] = mergedIdRanges[lastIdx].merge(idRange)
+		} else {
+			mergedIdRanges = append(mergedIdRanges, idRange)
+		}
+	}
+
 	// Find fresh ingredients.
 	var freshIngredients int
 
 	for _, ingredient := range ingredients {
-		for _, idRange := range idRanges {
+		for _, idRange := range mergedIdRanges {
 			if idRange.includes(ingredient) {
 				fmt.Printf(" - Fresh ingredient found %d\n", ingredient)
 				freshIngredients++
@@ -56,11 +104,19 @@ func main() {
 			}
 		}
 	}
+	fmt.Println()
 
 	// Find total possible fresh ingredients.
+	var availableIngredients int64
+	for _, idRange := range mergedIdRanges {
+		availableIngredients += idRange.until - idRange.from + 1
+		fmt.Println(" - Available range extended:", availableIngredients)
+	}
+	fmt.Println()
 
 	fmt.Println()
-	fmt.Printf("Result %d\n", freshIngredients)
+	fmt.Printf("Fresh %d\n", freshIngredients)
+	fmt.Printf("Available %d\n", availableIngredients)
 }
 
 func toInt(s string) int64 {
