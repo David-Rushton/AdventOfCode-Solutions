@@ -46,6 +46,20 @@
             "env": {
                 "aoc_day": "3"
             }
+        },
+        {
+            "name": "D5",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day05",
+            "args": [
+                "-t"
+            ],
+            "env": {
+                "aoc_day": "5"
+            }
         }
     ]
 }
