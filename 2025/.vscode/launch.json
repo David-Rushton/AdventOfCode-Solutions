@@ -60,6 +60,21 @@
             "env": {
                 "aoc_day": "5"
             }
+        },
+        {
+            "name": "D6",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}\\cmd\\day06",
+            "args": [
+                "-t",
+                "-2"
+            ],
+            "env": {
+                "aoc_day": "6"
+            }
         }
     ]
 }
