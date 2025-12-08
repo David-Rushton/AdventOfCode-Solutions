@@ -17,9 +17,34 @@ func main() {
 	fmt.Println("--- Day 7: Laboratories ---")
 	fmt.Println()
 
-	var splits int
 	grid := map[point]rune{}
+	start := point{}
+
+	// Parse input.
+	for y, line := range aoc.Input {
+		for x, char := range line {
+			p := point{x, y}
+			grid[p] = char
+
+			if char == 'S' {
+				start = p
+			}
+		}
+	}
+
+	splits := getSplits(grid, start)
+	timelines := getTimelines(grid, start)
+
+	fmt.Println()
+	fmt.Printf("Splits: %d\n", splits)
+	fmt.Printf("Timelines: %d\n", timelines)
+}
+
+func getSplits(grid map[point]rune, start point) int {
+	var splits int
+
 	tracking := map[point]bool{}
+	tracking[start] = true
 
 	// Parse input.
 	for y, line := range aoc.Input {
@@ -51,12 +76,38 @@ func main() {
 			}
 		}
 
-		printGrid(grid)
+		// printGrid(grid)
 		tracking = maps.Clone(newTracking)
 	}
 
-	fmt.Println()
-	fmt.Printf("Splits: %d\n", splits)
+	return splits
+}
+
+func getTimelines(grid map[point]rune, start point) int {
+	var timelines int
+
+	tracking := map[point]int{start: 1}
+
+	for len(tracking) > 0 {
+		newTracking := map[point]int{}
+
+		for p, count := range tracking {
+			if char, ok := grid[p]; ok {
+				if char == '^' {
+					newTracking[point{p.x + 1, p.y + 1}] += count
+					newTracking[point{p.x - 1, p.y + 1}] += count
+				} else {
+					newTracking[point{p.x, p.y + 1}] += count
+				}
+			} else {
+				timelines += count
+			}
+		}
+
+		tracking = maps.Clone(newTracking)
+	}
+
+	return timelines
 }
 
 func printGrid(grid map[point]rune) {

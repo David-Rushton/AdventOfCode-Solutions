@@ -5,75 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "D1",
+            "name": "D8",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}\\cmd\\day01",
-            "args": [
-                "-t"
-            ],
-            "env": {
-                "aoc_day": "1"
-            }
-        },
-        {
-            "name": "D2",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}\\cmd\\day02",
-            "args": [
-                "-t"
-            ],
-            "env": {
-                "aoc_day": "2"
-            }
-        },
-        {
-            "name": "D3",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}\\cmd\\day03",
+            "program": "${workspaceFolder}\\cmd\\day08",
             "args": [
                 "-t",
                 "-2"
             ],
             "env": {
-                "aoc_day": "3"
-            }
-        },
-        {
-            "name": "D5",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}\\cmd\\day05",
-            "args": [
-                "-t"
-            ],
-            "env": {
-                "aoc_day": "5"
-            }
-        },
-        {
-            "name": "D6",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}\\cmd\\day06",
-            "args": [
-                "-t",
-                "-2"
-            ],
-            "env": {
-                "aoc_day": "6"
+                "aoc_day": "8"
             }
         }
     ]
