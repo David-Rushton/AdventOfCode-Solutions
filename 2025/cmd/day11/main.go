@@ -14,25 +14,30 @@ func main() {
 	fmt.Println()
 
 	devices := parse(aoc.Input)
-	paths := solvePaths(devices)
+
+	var paths uint64
+	if aoc.Star == aoc.StarTwo {
+		svrToFft := solvePaths("svr", "fft", 1, devices)
+		fftToDac := solvePaths("fft", "dac", svrToFft, devices)
+		paths = solvePaths("dac", "out", fftToDac, devices)
+	} else {
+		paths = solvePaths("you", "out", 1, devices)
+	}
 
 	fmt.Println()
 	fmt.Printf("Paths: %d\n", paths)
 }
 
-func solvePaths(devices devices) uint64 {
+func solvePaths(from, to string, count uint64, devices devices) uint64 {
 	var pathsFound uint64
 
-	q := map[string]uint64{"you": 1}
-	allTime := map[string]uint64{}
-
+	q := map[string]uint64{from: count}
 	for len(q) > 0 {
 		nextQ := map[string]uint64{}
 
 		for device, count := range q {
-			allTime[device]++
 			for _, device := range devices[device] {
-				if device == "out" {
+				if device == to {
 					pathsFound += count
 					fmt.Printf(" - Paths found: %d                     \r", pathsFound)
 					continue
@@ -41,6 +46,7 @@ func solvePaths(devices devices) uint64 {
 				nextQ[device] += count
 			}
 		}
+
 		q = nextQ
 	}
 	fmt.Println()
